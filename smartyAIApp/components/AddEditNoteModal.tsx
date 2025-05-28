@@ -8,14 +8,16 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  TouchableOpacity,
+  Dimensions,
+  StatusBar,
 } from "react-native";
 import {
-  Modal,
-  Portal,
-  Button,
-  Card,
-  ActivityIndicator,
-} from "react-native-paper";
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { Button, ActivityIndicator } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import {
   NoteWithCategory,
@@ -31,6 +33,8 @@ interface AddEditNoteModalProps {
   noteToEdit?: NoteWithCategory | null;
 }
 
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
   visible,
   onDismiss,
@@ -40,6 +44,8 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const insets = useSafeAreaInsets();
 
   const { createNote, updateNote, deleteNote } = useNotesStore();
   const {
@@ -130,177 +136,299 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
     );
   }, [noteToEdit, deleteNote, onDismiss]);
 
+  const handleBackdropPress = useCallback(() => {
+    onDismiss();
+  }, [onDismiss]);
+
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modalContainer}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      presentationStyle="overFullScreen"
+      onRequestClose={onDismiss}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="rgba(0, 0, 0, 0.5)"
+      />
+      <View style={styles.modalContainer}>
+        <TouchableOpacity
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={handleBackdropPress}
+        />
+
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardAvoidingView}>
-          <Card style={styles.card}>
-            <Card.Title title={noteToEdit ? "Edit Note" : "Add Note"} />
-            <Card.Content>
-              <ScrollView
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={false}>
-                <View style={styles.formContainer}>
-                  <Text style={styles.label}>Category</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={categoryId || "none"}
-                      onValueChange={(value: string) =>
-                        setCategoryId(value === "none" ? null : value)
-                      }
-                      enabled={!categoriesLoading}
-                      style={styles.picker}>
-                      <Picker.Item label="None" value="none" />
-                      {categories.map((category) => (
-                        <Picker.Item
-                          key={category.id}
-                          label={category.name}
-                          value={category.id}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
+          <SafeAreaView style={styles.safeAreaContainer} edges={["bottom"]}>
+            <View
+              style={[
+                styles.modalContent,
+                { paddingBottom: Math.max(insets.bottom, 20) },
+              ]}>
+              {/* Handle Bar */}
+              <View style={styles.handleBar} />
 
-                  <Text style={styles.label}>Note Title</Text>
-                  <TextInput
-                    style={styles.titleInput}
-                    value={title}
-                    onChangeText={setTitle}
-                    placeholder="Enter note title"
-                    multiline={false}
-                    accessibilityLabel="Note title input"
-                  />
-
-                  <Text style={styles.label}>Note Content</Text>
-                  <TextInput
-                    style={styles.contentInput}
-                    value={content}
-                    onChangeText={setContent}
-                    placeholder="Enter note content"
-                    multiline
-                    textAlignVertical="top"
-                    accessibilityLabel="Note content input"
-                  />
-                </View>
-              </ScrollView>
-            </Card.Content>
-            <Card.Actions style={styles.actions}>
-              {noteToEdit && (
-                <Button
-                  mode="outlined"
-                  onPress={handleDelete}
-                  disabled={isSubmitting}
-                  buttonColor="#ff4444"
-                  textColor="white"
-                  style={styles.deleteButton}>
-                  Delete
-                </Button>
-              )}
-              <View style={styles.rightActions}>
-                <Button
-                  mode="outlined"
+              {/* Header */}
+              <View style={styles.header}>
+                <TouchableOpacity
                   onPress={onDismiss}
-                  disabled={isSubmitting}
                   style={styles.cancelButton}>
-                  Cancel
-                </Button>
-                <Button
-                  mode="contained"
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.headerTitle}>
+                  {noteToEdit ? "Edit Note" : "Add Note"}
+                </Text>
+
+                <TouchableOpacity
                   onPress={handleSubmit}
                   disabled={isSubmitting || !title.trim()}
-                  style={styles.submitButton}>
+                  style={[
+                    styles.saveButton,
+                    (!title.trim() || isSubmitting) &&
+                      styles.saveButtonDisabled,
+                  ]}>
                   {isSubmitting ? (
                     <ActivityIndicator size="small" color="white" />
-                  ) : noteToEdit ? (
-                    "Update"
                   ) : (
-                    "Create"
+                    <Text style={styles.saveText}>
+                      {noteToEdit ? "Update" : "Create"}
+                    </Text>
                   )}
-                </Button>
+                </TouchableOpacity>
               </View>
-            </Card.Actions>
-          </Card>
+
+              {/* Form Content */}
+              <ScrollView
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
+                bounces={false}>
+                <View style={styles.formContainer}>
+                  {/* Category Selector */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Category</Text>
+                    <View style={styles.pickerWrapper}>
+                      <Picker
+                        selectedValue={categoryId || "none"}
+                        onValueChange={(value: string) =>
+                          setCategoryId(value === "none" ? null : value)
+                        }
+                        enabled={!categoriesLoading}
+                        style={styles.picker}>
+                        <Picker.Item label="No Category" value="none" />
+                        {categories.map((category) => (
+                          <Picker.Item
+                            key={category.id}
+                            label={category.name}
+                            value={category.id}
+                          />
+                        ))}
+                      </Picker>
+                    </View>
+                  </View>
+
+                  {/* Title Input */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Title</Text>
+                    <TextInput
+                      style={styles.titleInput}
+                      value={title}
+                      onChangeText={setTitle}
+                      placeholder="Enter note title"
+                      placeholderTextColor="#A0A0A0"
+                      multiline={false}
+                      maxLength={100}
+                      accessibilityLabel="Note title input"
+                      returnKeyType="next"
+                    />
+                  </View>
+
+                  {/* Content Input */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Content</Text>
+                    <TextInput
+                      style={styles.contentInput}
+                      value={content}
+                      onChangeText={setContent}
+                      placeholder="Write your note here..."
+                      placeholderTextColor="#A0A0A0"
+                      multiline
+                      textAlignVertical="top"
+                      accessibilityLabel="Note content input"
+                      scrollEnabled={false}
+                    />
+                  </View>
+
+                  {/* Delete Button for Edit Mode */}
+                  {noteToEdit && (
+                    <TouchableOpacity
+                      onPress={handleDelete}
+                      disabled={isSubmitting}
+                      style={styles.deleteButton}>
+                      <Text style={styles.deleteButtonText}>Delete Note</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </ScrollView>
+            </View>
+          </SafeAreaView>
         </KeyboardAvoidingView>
-      </Modal>
-    </Portal>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    margin: 20,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   keyboardAvoidingView: {
-    flex: 1,
+    maxHeight: SCREEN_HEIGHT * 0.9,
   },
-  card: {
-    maxHeight: "90%",
+  safeAreaContainer: {
+    backgroundColor: "transparent",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: SCREEN_HEIGHT * 0.85,
+    minHeight: SCREEN_HEIGHT * 0.6,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  cancelButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    minWidth: 60,
+  },
+  cancelText: {
+    fontSize: 16,
+    color: "#007AFF",
+    fontWeight: "500",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    textAlign: "center",
+  },
+  saveButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    minWidth: 60,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveButtonDisabled: {
+    backgroundColor: "#C0C0C0",
+  },
+  saveText: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
   scrollView: {
-    maxHeight: 400,
+    flex: 1,
   },
   formContainer: {
-    paddingVertical: 8,
+    padding: 20,
+    paddingBottom: 20,
   },
-  label: {
+  inputGroup: {
+    marginBottom: 24,
+  },
+  inputLabel: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#1A1A1A",
     marginBottom: 8,
-    marginTop: 16,
-    color: "#333",
   },
-  pickerContainer: {
+  pickerWrapper: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
+    borderColor: "#E8E8E8",
+    overflow: "hidden",
   },
   picker: {
     height: 50,
+    color: "#1A1A1A",
+    backgroundColor: "transparent",
   },
   titleInput: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
+    borderColor: "#E8E8E8",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
+    color: "#1A1A1A",
+    fontWeight: "500",
   },
   contentInput: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    minHeight: 120,
-    backgroundColor: "#f9f9f9",
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    borderColor: "#E8E8E8",
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#1A1A1A",
+    minHeight: 120,
+    maxHeight: 200,
+    lineHeight: 22,
   },
   deleteButton: {
-    flex: 0,
+    backgroundColor: "#FF3B30",
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
   },
-  rightActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  cancelButton: {
-    marginRight: 8,
-  },
-  submitButton: {
-    minWidth: 80,
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
 

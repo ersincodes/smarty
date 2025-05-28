@@ -31,6 +31,7 @@ const NotesScreen: React.FC = () => {
     null
   );
   const [showEditModal, setShowEditModal] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
 
   const { notes, isLoading, error, fetchNotes, clearError } = useNotesStore();
 
@@ -73,6 +74,10 @@ const NotesScreen: React.FC = () => {
 
   const handleCloseChatModal = useCallback(() => {
     setShowChatModal(false);
+  }, []);
+
+  const handleFabStateChange = useCallback(({ open }: { open: boolean }) => {
+    setFabOpen(open);
   }, []);
 
   const renderNote = useCallback(
@@ -145,24 +150,30 @@ const NotesScreen: React.FC = () => {
 
       <Portal>
         <FAB.Group
-          open={false}
+          open={fabOpen}
           visible
-          icon="plus"
+          icon={fabOpen ? "close" : "plus"}
           actions={[
             {
               icon: "robot",
               label: "AI Chat",
-              onPress: () => setShowChatModal(true),
+              onPress: () => {
+                setShowChatModal(true);
+                setFabOpen(false);
+              },
               style: styles.fabAction,
             },
             {
               icon: "note-plus",
               label: "Add Note",
-              onPress: () => setShowAddModal(true),
+              onPress: () => {
+                setShowAddModal(true);
+                setFabOpen(false);
+              },
               style: styles.fabAction,
             },
           ]}
-          onStateChange={() => {}}
+          onStateChange={handleFabStateChange}
           fabStyle={styles.fab}
         />
       </Portal>
