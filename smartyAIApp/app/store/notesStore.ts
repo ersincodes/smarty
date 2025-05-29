@@ -9,10 +9,19 @@ interface NotesState {
   selectedNote: NoteWithCategory | null;
 
   // Actions
-  fetchNotes: () => Promise<void>;
-  createNote: (noteData: CreateNoteInput) => Promise<void>;
-  updateNote: (noteData: UpdateNoteInput) => Promise<void>;
-  deleteNote: (id: string) => Promise<void>;
+  fetchNotes: (getToken: () => Promise<string | null>) => Promise<void>;
+  createNote: (
+    noteData: CreateNoteInput,
+    getToken: () => Promise<string | null>
+  ) => Promise<void>;
+  updateNote: (
+    noteData: UpdateNoteInput,
+    getToken: () => Promise<string | null>
+  ) => Promise<void>;
+  deleteNote: (
+    id: string,
+    getToken: () => Promise<string | null>
+  ) => Promise<void>;
   setSelectedNote: (note: NoteWithCategory | null) => void;
   clearError: () => void;
 }
@@ -23,10 +32,10 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   error: null,
   selectedNote: null,
 
-  fetchNotes: async () => {
+  fetchNotes: async (getToken: () => Promise<string | null>) => {
     set({ isLoading: true, error: null });
     try {
-      const notes = await notesApi.getNotes();
+      const notes = await notesApi.getNotes(getToken);
       const notesWithCategory = notes.map((note) => ({
         ...note,
         category: note.category || null,
@@ -40,10 +49,13 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }
   },
 
-  createNote: async (noteData: CreateNoteInput) => {
+  createNote: async (
+    noteData: CreateNoteInput,
+    getToken: () => Promise<string | null>
+  ) => {
     set({ isLoading: true, error: null });
     try {
-      const newNote = await notesApi.createNote(noteData);
+      const newNote = await notesApi.createNote(noteData, getToken);
       const noteWithCategory = {
         ...newNote,
         category: newNote.category || null,
@@ -62,10 +74,13 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }
   },
 
-  updateNote: async (noteData: UpdateNoteInput) => {
+  updateNote: async (
+    noteData: UpdateNoteInput,
+    getToken: () => Promise<string | null>
+  ) => {
     set({ isLoading: true, error: null });
     try {
-      const updatedNote = await notesApi.updateNote(noteData);
+      const updatedNote = await notesApi.updateNote(noteData, getToken);
       const updatedNoteWithCategory = {
         ...updatedNote,
         category: updatedNote.category || null,
@@ -91,10 +106,10 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }
   },
 
-  deleteNote: async (id: string) => {
+  deleteNote: async (id: string, getToken: () => Promise<string | null>) => {
     set({ isLoading: true, error: null });
     try {
-      await notesApi.deleteNote(id);
+      await notesApi.deleteNote(id, getToken);
       const currentNotes = get().notes;
       const filteredNotes = currentNotes.filter((note) => note.id !== id);
       set({
