@@ -96,14 +96,14 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
           id: noteToEdit.id,
           title: title.trim(),
           content: content.trim(),
-          categoryId,
+          categoryId: categoryId || undefined,
         };
         await updateNote(updateData, getToken);
       } else {
         const createData: CreateNoteInput = {
           title: title.trim(),
           content: content.trim(),
-          categoryId,
+          categoryId: categoryId || undefined,
         };
         await createNote(createData, getToken);
       }
@@ -226,20 +226,20 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                     <Text style={styles.inputLabel}>Category</Text>
                     <View style={styles.pickerWrapper}>
                       <Picker
-                        selectedValue={categoryId || "none"}
+                        selectedValue={categoryId ?? "none"}
                         onValueChange={(value: string) =>
                           setCategoryId(value === "none" ? null : value)
                         }
                         enabled={!categoriesLoading}
                         style={styles.picker}>
                         <Picker.Item label="No Category" value="none" />
-                        {categories.map((category) => (
+                        {categories?.map((category) => (
                           <Picker.Item
                             key={category.id}
                             label={category.name}
                             value={category.id}
                           />
-                        ))}
+                        )) || []}
                       </Picker>
                     </View>
                   </View>

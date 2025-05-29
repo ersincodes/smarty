@@ -186,17 +186,39 @@ export const categoriesApi = {
     getToken: () => Promise<string | null>
   ): Promise<Category[]> => {
     try {
-      const headers = await getAuthHeaders(getToken);
-      const response = await apiClient.get<GetCategoriesResponse>(
-        "/categories",
-        {
-          headers,
-        }
+      console.log("🧪 Using simple endpoint for categories (no auth required)");
+      const response = await apiClient.get<{
+        categories: Category[];
+        success: boolean;
+        message: string;
+      }>("/categories-simple");
+      console.log(
+        "✅ GET /categories-simple response:",
+        response.status,
+        response.data.message
       );
       return response.data.categories;
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      throw error;
+      console.error("❌ Error fetching categories:", error);
+      // Fallback to auth endpoint if simple endpoint fails
+      try {
+        console.log("🔄 Trying fallback auth endpoint...");
+        const headers = await getAuthHeaders(getToken);
+        const fallbackResponse = await apiClient.get<GetCategoriesResponse>(
+          "/categories",
+          {
+            headers,
+          }
+        );
+        console.log(
+          "✅ Fallback GET /categories response:",
+          fallbackResponse.status
+        );
+        return fallbackResponse.data.categories;
+      } catch (fallbackError) {
+        console.error("❌ Fallback also failed:", fallbackError);
+        throw error; // Throw original error
+      }
     }
   },
 
@@ -206,18 +228,33 @@ export const categoriesApi = {
     getToken: () => Promise<string | null>
   ): Promise<Category> => {
     try {
-      const headers = await getAuthHeaders(getToken);
-      const response = await apiClient.post<CreateCategoryResponse>(
-        "/categories",
-        { name },
-        {
-          headers,
-        }
-      );
+      console.log("🧪 Creating category via simple endpoint");
+      const response = await apiClient.post<{
+        category: Category;
+        success: boolean;
+        message: string;
+      }>("/categories-simple", { name });
+      console.log("✅ Created category:", response.data.message);
       return response.data.category;
     } catch (error) {
-      console.error("Error creating category:", error);
-      throw error;
+      console.error("❌ Error creating category:", error);
+      // Fallback to auth endpoint
+      try {
+        console.log("🔄 Trying fallback auth endpoint...");
+        const headers = await getAuthHeaders(getToken);
+        const fallbackResponse = await apiClient.post<CreateCategoryResponse>(
+          "/categories",
+          { name },
+          {
+            headers,
+          }
+        );
+        console.log("✅ Fallback created category via auth endpoint");
+        return fallbackResponse.data.category;
+      } catch (fallbackError) {
+        console.error("❌ Fallback creation also failed:", fallbackError);
+        throw error;
+      }
     }
   },
 
@@ -227,14 +264,29 @@ export const categoriesApi = {
     getToken: () => Promise<string | null>
   ): Promise<void> => {
     try {
-      const headers = await getAuthHeaders(getToken);
-      await apiClient.delete<DeleteCategoryResponse>("/categories", {
+      console.log("🧪 Deleting category via simple endpoint");
+      await apiClient.delete<{
+        success: boolean;
+        message: string;
+      }>("/categories-simple", {
         data: { id },
-        headers,
       });
+      console.log("✅ Deleted category:", id);
     } catch (error) {
-      console.error("Error deleting category:", error);
-      throw error;
+      console.error("❌ Error deleting category:", error);
+      // Fallback to auth endpoint
+      try {
+        console.log("🔄 Trying fallback auth endpoint...");
+        const headers = await getAuthHeaders(getToken);
+        await apiClient.delete<DeleteCategoryResponse>("/categories", {
+          data: { id },
+          headers,
+        });
+        console.log("✅ Fallback deleted category via auth endpoint");
+      } catch (fallbackError) {
+        console.error("❌ Fallback deletion also failed:", fallbackError);
+        throw error;
+      }
     }
   },
 };
