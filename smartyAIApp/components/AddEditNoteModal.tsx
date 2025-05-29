@@ -19,6 +19,7 @@ import {
 } from "react-native-safe-area-context";
 import { Button, ActivityIndicator } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
+import { useAuth } from "@clerk/clerk-expo";
 import {
   NoteWithCategory,
   CreateNoteInput,
@@ -46,6 +47,7 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const insets = useSafeAreaInsets();
+  const { getToken } = useAuth();
 
   const { createNote, updateNote, deleteNote } = useNotesStore();
   const {
@@ -56,7 +58,14 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      fetchCategories();
+      // Fetch categories when modal opens - safe to not include fetchCategories in deps
+      // since we only want this to run when modal becomes visible
+      if (getToken) {
+        fetchCategories(getToken).catch((error) => {
+          console.error("Failed to fetch categories:", error);
+        });
+      }
+
       if (noteToEdit) {
         setTitle(noteToEdit.title);
         setContent(noteToEdit.content || "");
@@ -67,11 +76,16 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
         setCategoryId(null);
       }
     }
-  }, [visible, noteToEdit, fetchCategories]);
+  }, [visible, noteToEdit]); // Only depend on visible and noteToEdit
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
       Alert.alert("Error", "Please enter a title for your note.");
+      return;
+    }
+
+    if (!getToken) {
+      Alert.alert("Error", "Authentication required.");
       return;
     }
 
@@ -84,14 +98,14 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
           content: content.trim(),
           categoryId,
         };
-        await updateNote(updateData);
+        await updateNote(updateData, getToken);
       } else {
         const createData: CreateNoteInput = {
           title: title.trim(),
           content: content.trim(),
           categoryId,
         };
-        await createNote(createData);
+        await createNote(createData, getToken);
       }
       onDismiss();
     } catch (error) {
@@ -107,10 +121,11 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
     createNote,
     updateNote,
     onDismiss,
+    getToken,
   ]);
 
   const handleDelete = useCallback(async () => {
-    if (!noteToEdit) return;
+    if (!noteToEdit || !getToken) return;
 
     Alert.alert(
       "Delete Note",
@@ -123,7 +138,7 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
           onPress: async () => {
             setIsSubmitting(true);
             try {
-              await deleteNote(noteToEdit.id);
+              await deleteNote(noteToEdit.id, getToken);
               onDismiss();
             } catch (error) {
               Alert.alert("Error", "Failed to delete note. Please try again.");
@@ -134,7 +149,7 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
         },
       ]
     );
-  }, [noteToEdit, deleteNote, onDismiss]);
+  }, [noteToEdit, deleteNote, onDismiss, getToken]);
 
   const handleBackdropPress = useCallback(() => {
     onDismiss();

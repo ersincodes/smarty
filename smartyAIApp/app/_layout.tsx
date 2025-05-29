@@ -11,6 +11,11 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
+import { useAuth } from "@clerk/clerk-expo";
+import ClerkProvider from "./providers/ClerkProvider";
+import AuthScreen from "./components/AuthScreen";
+import LoadingScreen from "./components/LoadingScreen";
+import CustomSplashScreen from "./components/SplashScreen";
 
 import { useColorScheme } from "@/components/useColorScheme";
 
@@ -70,7 +75,7 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return null;
+    return <CustomSplashScreen />;
   }
 
   return <RootLayoutNav />;
@@ -81,14 +86,32 @@ function RootLayoutNav() {
   const isDark = colorScheme === "dark";
 
   return (
-    <PaperProvider theme={isDark ? darkTheme : lightTheme}>
-      <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-        <StatusBar style={isDark ? "light" : "dark"} />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-        </Stack>
-      </ThemeProvider>
-    </PaperProvider>
+    <ClerkProvider>
+      <PaperProvider theme={isDark ? darkTheme : lightTheme}>
+        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+          <StatusBar style={isDark ? "light" : "dark"} />
+          <AuthenticatedApp />
+        </ThemeProvider>
+      </PaperProvider>
+    </ClerkProvider>
+  );
+}
+
+function AuthenticatedApp() {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) {
+    return <LoadingScreen />;
+  }
+
+  if (!isSignedIn) {
+    return <AuthScreen />;
+  }
+
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+    </Stack>
   );
 }

@@ -1,32 +1,33 @@
 {
   "expo": {
-    "name": "smartyAIApp",
-    "slug": "smartyAIApp",
+    "name": "Smarty AI",
+    "slug": "smarty-ai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "smartyaiapp",
+    "icon": "./assets/images/android-chrome-512x512.png",
+    "scheme": "smartyai",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/android-chrome-512x512.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/images/apple-touch-icon.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/android-chrome-512x512.png",
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon-32x32.png"
     },
     "plugins": [
       "expo-router",
@@ -41,7 +42,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/notification-icon.png",
+          "icon": "./assets/images/android-chrome-192x192.png",
           "color": "#ffffff",
           "defaultChannel": "default"
         }
@@ -49,6 +50,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "clerkPublishableKey": "pk_test_cG9saXNoZWQtY2hpcG11bmstMjguY2xlcmsuYWNjb3VudHMuZGV2JA",
+      "apiBaseUrl": "https://smarty-teal.vercel.app",
+      "openaiApiKey": "k-svcacct-e68rYQt8lGbAmkWjgSWPax6ZDUfxhaCqECjjyVDWb14JKNGi-3Z0vGqYBo1S88AskBEfPevWgiT3BlbkFJLZ-WkTi-1KChO51u7wJR284pXpW-MDZzAdoNTNRpnGeVZL7_GKh72ezekwHwp9MYYXrpQIQ6sA"
     }
   }
 }

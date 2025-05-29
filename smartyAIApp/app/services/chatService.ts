@@ -54,8 +54,7 @@ class ChatService {
 
     const response = await fetch(
       `${
-        process.env.EXPO_PUBLIC_API_BASE_URL ||
-        "https://smarty-teal.vercel.app/api"
+        process.env.EXPO_PUBLIC_API_BASE_URL || "https://smarty-teal.vercel.app"
       }/chat`,
       {
         method: "POST",

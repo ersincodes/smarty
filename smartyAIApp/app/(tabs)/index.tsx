@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -15,9 +15,12 @@ import {
   Searchbar,
   ActivityIndicator,
   Snackbar,
+  Button,
 } from "react-native-paper";
+import { useAuth } from "@clerk/clerk-expo";
 import { useNotesStore } from "../store/notesStore";
 import { useCategoriesStore } from "../store/categoriesStore";
+import { testApiEndpoints } from "../config/api";
 import { NoteWithCategory } from "../types";
 import Note from "../../components/Note";
 import AddEditNoteModal from "../../components/AddEditNoteModal";
@@ -32,15 +35,28 @@ const NotesScreen: React.FC = () => {
   );
   const [showEditModal, setShowEditModal] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const hasInitialized = useRef(false);
 
+  const { getToken, signOut, isSignedIn } = useAuth();
   const { notes, isLoading, error, fetchNotes, clearError } = useNotesStore();
-
   const { fetchCategories } = useCategoriesStore();
 
   useEffect(() => {
-    fetchNotes();
-    fetchCategories();
-  }, [fetchNotes, fetchCategories]);
+    if (isSignedIn && !hasInitialized.current) {
+      hasInitialized.current = true;
+      const loadData = async () => {
+        try {
+          await fetchNotes(getToken);
+          await fetchCategories(getToken);
+        } catch (error) {
+          console.error("Failed to load initial data:", error);
+        }
+      };
+      loadData();
+    } else if (!isSignedIn) {
+      hasInitialized.current = false;
+    }
+  }, [isSignedIn]);
 
   const filteredNotes = notes.filter(
     (note) =>
@@ -50,13 +66,23 @@ const NotesScreen: React.FC = () => {
   );
 
   const handleRefresh = useCallback(async () => {
+    if (!isSignedIn) return;
+
     try {
-      await fetchNotes();
-      await fetchCategories();
+      await fetchNotes(getToken);
+      await fetchCategories(getToken);
     } catch (error) {
       Alert.alert("Error", "Failed to refresh notes");
     }
-  }, [fetchNotes, fetchCategories]);
+  }, [isSignedIn]);
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      Alert.alert("Error", "Failed to sign out");
+    }
+  }, [signOut]);
 
   const handleNotePress = useCallback((note: NoteWithCategory) => {
     setSelectedNote(note);
@@ -75,6 +101,22 @@ const NotesScreen: React.FC = () => {
   const handleCloseChatModal = useCallback(() => {
     setShowChatModal(false);
   }, []);
+
+  const handleTestApiEndpoints = useCallback(async () => {
+    if (!isSignedIn) {
+      Alert.alert("Error", "Please sign in first");
+      return;
+    }
+
+    console.log("Testing API endpoints...");
+    try {
+      await testApiEndpoints(getToken);
+      Alert.alert("Debug", "Check console for API test results");
+    } catch (error) {
+      console.error("API testing failed:", error);
+      Alert.alert("Error", "API testing failed - check console");
+    }
+  }, [isSignedIn, getToken]);
 
   const handleFabStateChange = useCallback(({ open }: { open: boolean }) => {
     setFabOpen(open);
@@ -101,6 +143,7 @@ const NotesScreen: React.FC = () => {
     <View style={styles.headerContainer}>
       <Appbar.Header style={styles.appbar}>
         <Appbar.Content title="Smarty" titleStyle={styles.appbarTitle} />
+        <Appbar.Action icon="logout" onPress={handleSignOut} />
       </Appbar.Header>
 
       <View style={styles.searchContainer}>
@@ -120,32 +163,47 @@ const NotesScreen: React.FC = () => {
       {renderHeader()}
 
       <View style={styles.content}>
-        {isLoading && notes.length === 0 ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" />
-            <Text style={styles.loadingText}>Loading notes...</Text>
+        {/* Error State with Debug Button */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Error: {error}</Text>
+            <Button
+              mode="outlined"
+              onPress={handleTestApiEndpoints}
+              style={styles.debugButton}>
+              🔍 Debug API Endpoints
+            </Button>
           </View>
-        ) : (
-          <FlatList
-            data={filteredNotes}
-            renderItem={renderNote}
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={renderEmptyState}
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoading}
-                onRefresh={handleRefresh}
-                colors={["#007AFF"]}
-              />
-            }
-            contentContainerStyle={
-              filteredNotes.length === 0
-                ? styles.emptyListContainer
-                : styles.listContainer
-            }
-            showsVerticalScrollIndicator={false}
-          />
         )}
+
+        {/* Notes List */}
+        {!error &&
+          (isLoading && notes.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" />
+              <Text style={styles.loadingText}>Loading notes...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredNotes}
+              renderItem={renderNote}
+              keyExtractor={(item) => item.id}
+              ListEmptyComponent={renderEmptyState}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isLoading}
+                  onRefresh={handleRefresh}
+                  colors={["#007AFF"]}
+                />
+              }
+              contentContainerStyle={
+                filteredNotes.length === 0
+                  ? styles.emptyListContainer
+                  : styles.listContainer
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          ))}
       </View>
 
       <Portal>
@@ -280,6 +338,18 @@ const styles = StyleSheet.create({
   },
   snackbar: {
     backgroundColor: "#f44336",
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+  },
+  errorText: {
+    flex: 1,
+    color: "#f44336",
+  },
+  debugButton: {
+    backgroundColor: "#007AFF",
   },
 });
 
