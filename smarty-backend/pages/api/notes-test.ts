@@ -77,7 +77,7 @@ export default async function handler(
     // Simulate user authentication for testing - NO REAL AUTH REQUIRED
     const userId = "test-user";
 
-    console.log(`[TEST ENDPOINT] ${req.method} /api/notes-test`);
+    console.log(`[TEST ENDPOINT] ${req.method} /notes-test`);
 
     switch (req.method) {
       case "GET":

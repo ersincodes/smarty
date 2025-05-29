@@ -13,6 +13,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@clerk/clerk-expo": "^2.11.9",
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-picker/picker": "^2.11.0",
@@ -31,6 +32,7 @@
     "expo-local-authentication": "~16.0.4",
     "expo-notifications": "~0.31.2",
     "expo-router": "~5.0.6",
+    "expo-secure-store": "^14.2.3",
     "expo-speech": "^13.1.7",
     "expo-splash-screen": "~0.30.8",
     "expo-sqlite": "~15.2.10",
@@ -51,7 +53,8 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "zustand": "^5.0.5"
+    "zustand": "^5.0.5",
+    "expo-linear-gradient": "~14.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

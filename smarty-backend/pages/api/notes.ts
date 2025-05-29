@@ -79,7 +79,7 @@ export default async function handler(
         error: "Authentication failed",
         details:
           "Clerk authentication is not properly configured. Please check your CLERK_SECRET_KEY environment variable.",
-        hint: "Use /api/notes-test or /api/notes-simple for testing without authentication",
+        hint: "Use /notes-test or /api/notes-simple for testing without authentication",
       });
     }
 
@@ -88,7 +88,7 @@ export default async function handler(
         error: "Unauthorized - No user ID found",
         details:
           "Please ensure you are signed in and your authentication token is valid.",
-        hint: "Use /api/notes-test or /api/notes-simple for testing without authentication",
+        hint: "Use /notes-test or /api/notes-simple for testing without authentication",
       });
     }
 

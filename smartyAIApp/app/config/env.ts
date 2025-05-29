@@ -16,7 +16,7 @@ export const ENV = {
     process.env.EXPO_PUBLIC_API_BASE_URL ||
     (isDevelopment
       ? "http://localhost:3000/api" // Local development - YOUR NEXT.JS BACKEND!
-      : "https://smarty-teal.vercel.app/api"), // Production
+      : "https://smarty-teal.vercel.app"), // Production
   IS_DEVELOPMENT: isDevelopment,
 };
 
