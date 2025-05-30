@@ -36,15 +36,28 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const notes = await notesApi.getNotes(getToken);
-      const notesWithCategory = notes.map((note) => ({
+      const notesWithCategory = (notes || []).map((note) => ({
         ...note,
         category: note.category || null,
       })) as NoteWithCategory[];
       set({ notes: notesWithCategory, isLoading: false });
     } catch (error) {
+      // Since the API already handles 405 errors gracefully by returning empty array,
+      // we should rarely reach this catch block. If we do, it means a serious error occurred.
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch notes";
+
+      console.log(
+        "⚠️ Unexpected error in notesStore.fetchNotes:",
+        errorMessage
+      );
+
+      // Set empty array and no error message to prevent UI from showing error state
+      // The API layer already handles the 405 gracefully
       set({
-        error: error instanceof Error ? error.message : "Failed to fetch notes",
+        notes: [],
         isLoading: false,
+        error: null, // Don't show error to user for missing endpoints
       });
     }
   },

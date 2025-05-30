@@ -6,6 +6,7 @@ import {
   CreateNoteInput,
   UpdateNoteInput,
   ChatMessage,
+  ChatResponse,
 } from "../types";
 import {
   notesApi,
@@ -36,7 +37,12 @@ export const useNotes = () => {
       const notes = await notesApi.getNotes(getToken);
       setState({ data: notes, loading: false, error: null });
     } catch (error) {
-      setState({ data: null, loading: false, error: handleApiError(error) });
+      console.log("⚠️ Unexpected error in useNotes.fetchNotes:", error);
+      setState({
+        data: [],
+        loading: false,
+        error: handleApiError(error),
+      });
     }
   }, [getToken]);
 
@@ -100,19 +106,75 @@ export const useNotes = () => {
     [getToken, fetchNotes]
   );
 
-  // Auto-fetch notes on mount
+  const searchNotes = useCallback(
+    async (query: string): Promise<Note[]> => {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        const searchResults = await notesApi.searchNotes(query, getToken);
+        setState((prev) => ({ ...prev, loading: false, error: null }));
+        return searchResults;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: handleApiError(error),
+        }));
+        return [];
+      }
+    },
+    [getToken]
+  );
+
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
 
   return {
-    notes: state.data,
+    notes: state.data || [],
     loading: state.loading,
     error: state.error,
     fetchNotes,
     createNote,
     updateNote,
     deleteNote,
+    searchNotes,
+  };
+};
+
+// Individual note hook
+export const useNote = (id: string) => {
+  const [state, setState] = useState<ApiState<Note>>({
+    data: null,
+    loading: false,
+    error: null,
+  });
+  const { getToken } = useAuth();
+
+  const fetchNote = useCallback(async () => {
+    if (!id) return;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const note = await notesApi.getNote(id, getToken);
+      setState({ data: note, loading: false, error: null });
+    } catch (error) {
+      setState({
+        data: null,
+        loading: false,
+        error: handleApiError(error),
+      });
+    }
+  }, [id, getToken]);
+
+  useEffect(() => {
+    fetchNote();
+  }, [fetchNote]);
+
+  return {
+    note: state.data,
+    loading: state.loading,
+    error: state.error,
+    refetch: fetchNote,
   };
 };
 
@@ -131,18 +193,55 @@ export const useCategories = () => {
       const categories = await categoriesApi.getCategories(getToken);
       setState({ data: categories, loading: false, error: null });
     } catch (error) {
-      setState({ data: null, loading: false, error: handleApiError(error) });
+      setState({
+        data: [],
+        loading: false,
+        error: handleApiError(error),
+      });
     }
   }, [getToken]);
 
   const createCategory = useCallback(
-    async (name: string): Promise<Category | null> => {
+    async (categoryData: {
+      name: string;
+      color: string;
+    }): Promise<Category | null> => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
-        const newCategory = await categoriesApi.createCategory(name, getToken);
+        const newCategory = await categoriesApi.createCategory(
+          categoryData,
+          getToken
+        );
         // Refresh the categories list
         await fetchCategories();
         return newCategory;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: handleApiError(error),
+        }));
+        return null;
+      }
+    },
+    [getToken, fetchCategories]
+  );
+
+  const updateCategory = useCallback(
+    async (
+      id: string,
+      categoryData: Partial<{ name: string; color: string }>
+    ): Promise<Category | null> => {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        const updatedCategory = await categoriesApi.updateCategory(
+          id,
+          categoryData,
+          getToken
+        );
+        // Refresh the categories list
+        await fetchCategories();
+        return updatedCategory;
       } catch (error) {
         setState((prev) => ({
           ...prev,
@@ -175,142 +274,66 @@ export const useCategories = () => {
     [getToken, fetchCategories]
   );
 
-  // Auto-fetch categories on mount
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
   return {
-    categories: state.data,
+    categories: state.data || [],
     loading: state.loading,
     error: state.error,
     fetchCategories,
     createCategory,
+    updateCategory,
     deleteCategory,
   };
 };
 
-// Chat hook with streaming support
+// Chat hook with enhanced response handling
 export const useChat = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const { getToken } = useAuth();
-
-  const sendMessage = useCallback(
-    async (
-      userMessage: string,
-      onStreamChunk?: (chunk: string) => void
-    ): Promise<string | null> => {
-      setLoading(true);
-      setError(null);
-      setIsStreaming(!!onStreamChunk);
-
-      // Add user message to the conversation
-      const newUserMessage: ChatMessage = {
-        role: "user",
-        content: userMessage,
-      };
-
-      const updatedMessages = [...messages, newUserMessage];
-      setMessages(updatedMessages);
-
-      try {
-        let assistantResponse = "";
-
-        if (onStreamChunk) {
-          // Streaming version
-          assistantResponse = await chatApi.sendMessage(
-            updatedMessages,
-            getToken,
-            (chunk) => {
-              onStreamChunk(chunk);
-            }
-          );
-        } else {
-          // Non-streaming version
-          assistantResponse = await chatApi.sendMessageSimple(
-            updatedMessages,
-            getToken
-          );
-        }
-
-        // Add assistant response to the conversation
-        const assistantMessage: ChatMessage = {
-          role: "assistant",
-          content: assistantResponse,
-        };
-
-        setMessages([...updatedMessages, assistantMessage]);
-        setLoading(false);
-        setIsStreaming(false);
-        return assistantResponse;
-      } catch (error) {
-        setError(handleApiError(error));
-        setLoading(false);
-        setIsStreaming(false);
-        return null;
-      }
-    },
-    [messages, getToken]
-  );
-
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-    setError(null);
-  }, []);
-
-  const removeLastMessage = useCallback(() => {
-    setMessages((prev) => prev.slice(0, -1));
-  }, []);
-
-  return {
-    messages,
-    loading,
-    error,
-    isStreaming,
-    sendMessage,
-    clearMessages,
-    removeLastMessage,
-  };
-};
-
-// Hook for individual note operations (useful for detail views)
-export const useNote = (noteId?: string) => {
-  const [state, setState] = useState<ApiState<Note>>({
-    data: null,
+  const [state, setState] = useState<{
+    messages: ChatMessage[];
+    loading: boolean;
+    error: string | null;
+  }>({
+    messages: [],
     loading: false,
     error: null,
   });
   const { getToken } = useAuth();
 
-  const fetchNote = useCallback(
-    async (id: string) => {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
-      try {
-        // Since there's no single note endpoint, we'll fetch all notes and find the one we need
-        const notes = await notesApi.getNotes(getToken);
-        const note = notes.find((n) => n.id === id);
-        if (note) {
-          setState({ data: note, loading: false, error: null });
-        } else {
-          setState({ data: null, loading: false, error: "Note not found" });
-        }
-      } catch (error) {
-        setState({ data: null, loading: false, error: handleApiError(error) });
-      }
-    },
-    [getToken]
-  );
+  const sendMessage = useCallback(
+    async (newMessage: string): Promise<ChatResponse | null> => {
+      const userMessage: ChatMessage = {
+        role: "user",
+        content: newMessage,
+      };
 
-  const updateNote = useCallback(
-    async (noteData: UpdateNoteInput): Promise<Note | null> => {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
+      // Add user message immediately
+      setState((prev) => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        loading: true,
+        error: null,
+      }));
+
       try {
-        const updatedNote = await notesApi.updateNote(noteData, getToken);
-        setState({ data: updatedNote, loading: false, error: null });
-        return updatedNote;
+        const messages = [...state.messages, userMessage];
+        const response = await chatApi.sendMessage(messages, getToken);
+
+        const assistantMessage: ChatMessage = {
+          role: "assistant",
+          content: response.content,
+        };
+
+        setState((prev) => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          loading: false,
+          error: null,
+        }));
+
+        return response;
       } catch (error) {
         setState((prev) => ({
           ...prev,
@@ -320,42 +343,37 @@ export const useNote = (noteId?: string) => {
         return null;
       }
     },
-    [getToken]
+    [state.messages, getToken]
   );
 
-  const deleteNote = useCallback(
-    async (id: string): Promise<boolean> => {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
+  const getSuggestions = useCallback(
+    async (prompt: string): Promise<string[]> => {
       try {
-        await notesApi.deleteNote(id, getToken);
-        setState({ data: null, loading: false, error: null });
-        return true;
+        const response = await chatApi.getSuggestions(prompt, getToken);
+        return response.suggestions;
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          loading: false,
-          error: handleApiError(error),
-        }));
-        return false;
+        console.error("Failed to get suggestions:", error);
+        return [];
       }
     },
     [getToken]
   );
 
-  // Auto-fetch note when noteId is provided
-  useEffect(() => {
-    if (noteId) {
-      fetchNote(noteId);
-    }
-  }, [noteId, fetchNote]);
+  const clearMessages = useCallback(() => {
+    setState({
+      messages: [],
+      loading: false,
+      error: null,
+    });
+  }, []);
 
   return {
-    note: state.data,
+    messages: state.messages,
     loading: state.loading,
     error: state.error,
-    fetchNote,
-    updateNote,
-    deleteNote,
+    sendMessage,
+    getSuggestions,
+    clearMessages,
   };
 };
 

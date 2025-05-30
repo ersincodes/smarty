@@ -29,7 +29,7 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const categories = await categoriesApi.getCategories(getToken);
-      set({ categories, isLoading: false });
+      set({ categories: categories || [], isLoading: false });
     } catch (error) {
       set({
         error:
