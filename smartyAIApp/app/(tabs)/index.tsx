@@ -6,6 +6,7 @@ import {
   RefreshControl,
   Alert,
   Text,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -20,16 +21,18 @@ import {
 import { useAuth } from "@clerk/clerk-expo";
 import { useNotesStore } from "../store/notesStore";
 import { useCategoriesStore } from "../store/categoriesStore";
-import { testApiEndpoints } from "../config/api";
+// import { testApiEndpoints } from "../config/api";
 import { NoteWithCategory } from "../types";
 import Note from "../../components/Note";
 import AddEditNoteModal from "../../components/AddEditNoteModal";
 import AIChatModal from "../../components/AIChatModal";
+import BackendConnectionTest from "../components/BackendConnectionTest";
 
 const NotesScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showConnectionTest, setShowConnectionTest] = useState(false);
   const [selectedNote, setSelectedNote] = useState<NoteWithCategory | null>(
     null
   );
@@ -58,11 +61,11 @@ const NotesScreen: React.FC = () => {
     }
   }, [isSignedIn]);
 
-  const filteredNotes = notes.filter(
+  const filteredNotes = (notes || []).filter(
     (note) =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       note.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
+      note.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleRefresh = useCallback(async () => {
@@ -102,21 +105,40 @@ const NotesScreen: React.FC = () => {
     setShowChatModal(false);
   }, []);
 
+  /*
   const handleTestApiEndpoints = useCallback(async () => {
     if (!isSignedIn) {
       Alert.alert("Error", "Please sign in first");
       return;
     }
 
-    console.log("Testing API endpoints...");
+    console.log("🚀 Starting comprehensive API testing...");
     try {
-      await testApiEndpoints(getToken);
-      Alert.alert("Debug", "Check console for API test results");
+      // Import the new exploration function
+      // const { exploreBackendRoutes } = await import("../config/api");
+
+      // Run both comprehensive testing and backend exploration
+      // await exploreBackendRoutes(getToken);
+      // await testApiEndpoints(getToken);
+
+      Alert.alert(
+        "Debug Complete",
+        "Check console for detailed API test results. Look for working endpoints and proper response formats.",
+        [
+          {
+            text: "View Console",
+            onPress: () =>
+              console.log("💡 Check the console for detailed results!"),
+          },
+          { text: "OK", style: "default" },
+        ]
+      );
     } catch (error) {
       console.error("API testing failed:", error);
-      Alert.alert("Error", "API testing failed - check console");
+      Alert.alert("Error", "API testing failed - check console for details");
     }
   }, [isSignedIn, getToken]);
+  */
 
   const handleFabStateChange = useCallback(({ open }: { open: boolean }) => {
     setFabOpen(open);
@@ -134,8 +156,21 @@ const NotesScreen: React.FC = () => {
       <Text style={styles.emptyStateIcon}>📝</Text>
       <Text style={styles.emptyStateTitle}>No notes yet</Text>
       <Text style={styles.emptyStateText}>
-        Tap the + button to create your first note
+        {notes.length === 0 && !isLoading
+          ? "The notes feature is being set up on the backend. You can create notes, and they'll be stored locally for now."
+          : "Tap the + button to create your first note"}
       </Text>
+      {/*
+      {notes.length === 0 && !isLoading && (
+        <Button
+          mode="outlined"
+          onPress={handleTestApiEndpoints}
+          style={styles.debugButton}
+          accessibilityLabel="Test API endpoints">
+          🔍 Check Backend Status
+        </Button>
+      )}
+      */}
     </View>
   );
 
@@ -163,16 +198,28 @@ const NotesScreen: React.FC = () => {
       {renderHeader()}
 
       <View style={styles.content}>
+        {/* Backend Status Info */}
+        {notes.length === 0 && !isLoading && !error && (
+          <View style={styles.statusBanner}>
+            <Text style={styles.statusText}>
+              🔧 Backend notes endpoint is being configured. Local note creation
+              still works!
+            </Text>
+          </View>
+        )}
+
         {/* Error State with Debug Button */}
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>Error: {error}</Text>
+            {/*
             <Button
               mode="outlined"
               onPress={handleTestApiEndpoints}
               style={styles.debugButton}>
               🔍 Debug API Endpoints
             </Button>
+            */}
           </View>
         )}
 
@@ -212,6 +259,17 @@ const NotesScreen: React.FC = () => {
           visible
           icon={fabOpen ? "close" : "plus"}
           actions={[
+            /*
+            {
+              icon: "wifi-check",
+              label: "Test Backend",
+              onPress: () => {
+                setShowConnectionTest(true);
+                setFabOpen(false);
+              },
+              style: styles.fabAction,
+            },
+            */
             {
               icon: "robot",
               label: "AI Chat",
@@ -248,6 +306,26 @@ const NotesScreen: React.FC = () => {
       />
 
       <AIChatModal visible={showChatModal} onDismiss={handleCloseChatModal} />
+
+      {/* Backend Connection Test Modal */}
+      {/*
+      <Portal>
+        <Modal
+          visible={showConnectionTest}
+          onDismiss={() => setShowConnectionTest(false)}
+          style={styles.connectionTestModal}>
+          <View style={styles.connectionTestContent}>
+            <BackendConnectionTest />
+            <Button
+              mode="outlined"
+              onPress={() => setShowConnectionTest(false)}
+              style={styles.closeTestButton}>
+              Close Test
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
+      */}
 
       <Snackbar
         visible={!!error}
@@ -349,7 +427,38 @@ const styles = StyleSheet.create({
     color: "#f44336",
   },
   debugButton: {
+    marginTop: 12,
     backgroundColor: "#007AFF",
+  },
+  statusBanner: {
+    backgroundColor: "#fff3cd",
+    borderColor: "#ffeaa7",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    margin: 16,
+    alignItems: "center",
+  },
+  statusText: {
+    fontSize: 14,
+    color: "#856404",
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  connectionTestModal: {
+    padding: 20,
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 16,
+    maxHeight: "80%",
+  },
+  connectionTestContent: {
+    flex: 1,
+  },
+  closeTestButton: {
+    marginTop: 16,
+    backgroundColor: "transparent",
+    borderColor: "#007AFF",
   },
 });
 

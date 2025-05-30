@@ -199,7 +199,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ visible, onDismiss }) => {
                     ref={flatListRef}
                     data={messages}
                     renderItem={renderMessage}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => item.role}
                     ListEmptyComponent={renderEmptyState}
                     ListFooterComponent={() => (
                       <>

@@ -53,7 +53,8 @@
     },
     "extra": {
       "clerkPublishableKey": "pk_test_cG9saXNoZWQtY2hpcG11bmstMjguY2xlcmsuYWNjb3VudHMuZGV2JA",
-      "apiBaseUrl": "https://smarty-teal.vercel.app",
+      "apiBaseUrl": "https://smarty-teal.vercel.app/api",
+      "devApiUrl": "http://localhost:3000/api",
       "openaiApiKey": "k-svcacct-e68rYQt8lGbAmkWjgSWPax6ZDUfxhaCqECjjyVDWb14JKNGi-3Z0vGqYBo1S88AskBEfPevWgiT3BlbkFJLZ-WkTi-1KChO51u7wJR284pXpW-MDZzAdoNTNRpnGeVZL7_GKh72ezekwHwp9MYYXrpQIQ6sA"
     }
   }

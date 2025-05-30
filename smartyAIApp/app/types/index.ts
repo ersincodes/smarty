@@ -3,7 +3,7 @@ export interface Note {
   title: string;
   content: string;
   userId: string;
-  categoryId: string | null;
+  categoryId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   category?: Category | null;
@@ -12,6 +12,8 @@ export interface Note {
 export interface Category {
   id: string;
   name: string;
+  color: string;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,17 +22,27 @@ export interface NoteWithCategory extends Note {
   category: Category | null;
 }
 
-export interface CreateNoteInput {
+export interface CreateNoteRequest {
   title: string;
   content: string;
   categoryId?: string;
 }
 
-export interface UpdateNoteInput {
-  id: string;
-  title: string;
-  content: string;
+export interface UpdateNoteRequest {
+  title?: string;
+  content?: string;
   categoryId?: string;
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+  color: string;
+}
+
+// Legacy interfaces for backward compatibility
+export interface CreateNoteInput extends CreateNoteRequest {}
+export interface UpdateNoteInput extends UpdateNoteRequest {
+  id: string;
 }
 
 export interface ChatMessage {
@@ -40,6 +52,11 @@ export interface ChatMessage {
 
 export interface ChatRequest {
   messages: ChatMessage[];
+}
+
+export interface ChatResponse {
+  content: string;
+  relatedNotes?: Note[];
 }
 
 export interface ApiResponse<T = any> {
@@ -76,6 +93,8 @@ export interface DeleteCategoryResponse {
 // Error response type
 export interface ApiError {
   error: string;
+  message?: string; // Next.js Route Handlers might return this
+  details?: string;
 }
 
 // Chat streaming types

@@ -99,7 +99,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
         <View style={styles.footer}>
           <View style={styles.tags}>
-            {note.tags.slice(0, 3).map((tag, index) => (
+            {(note.tags || []).slice(0, 3).map((tag, index) => (
               <Chip
                 key={index}
                 compact
@@ -108,9 +108,9 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 {tag}
               </Chip>
             ))}
-            {note.tags.length > 3 && (
+            {(note.tags || []).length > 3 && (
               <Text style={styles.moreTagsText}>
-                +{note.tags.length - 3} more
+                +{(note.tags || []).length - 3} more
               </Text>
             )}
           </View>
