@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { NoteWithCategory, CreateNoteInput, UpdateNoteInput } from "../types";
 import { notesApi } from "../config/api";
+import { useCategoriesStore } from "./categoriesStore";
 
 interface NotesState {
   notes: NoteWithCategory[];
@@ -10,6 +11,7 @@ interface NotesState {
 
   // Actions
   fetchNotes: (getToken: () => Promise<string | null>) => Promise<void>;
+  refreshNotesCategories: () => void;
   createNote: (
     noteData: CreateNoteInput,
     getToken: () => Promise<string | null>
@@ -36,10 +38,23 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const notes = await notesApi.getNotes(getToken);
-      const notesWithCategory = (notes || []).map((note) => ({
-        ...note,
-        category: note.category || null,
-      })) as NoteWithCategory[];
+
+      // Get the latest categories from the categories store
+      const categoriesState = useCategoriesStore.getState();
+      const categories = categoriesState.categories;
+
+      const notesWithCategory = (notes || []).map((note) => {
+        // Find the category for this note
+        const category = note.categoryId
+          ? categories.find((cat) => cat.id === note.categoryId) || null
+          : null;
+
+        return {
+          ...note,
+          category: category,
+        } as NoteWithCategory;
+      });
+
       set({ notes: notesWithCategory, isLoading: false });
     } catch (error) {
       // Since the API already handles 405 errors gracefully by returning empty array,
@@ -62,6 +77,26 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }
   },
 
+  refreshNotesCategories: () => {
+    const currentNotes = get().notes;
+    const categoriesState = useCategoriesStore.getState();
+    const categories = categoriesState.categories;
+
+    const notesWithUpdatedCategories = currentNotes.map((note) => {
+      // Find the category for this note
+      const category = note.categoryId
+        ? categories.find((cat) => cat.id === note.categoryId) || null
+        : null;
+
+      return {
+        ...note,
+        category: category,
+      };
+    });
+
+    set({ notes: notesWithUpdatedCategories });
+  },
+
   createNote: async (
     noteData: CreateNoteInput,
     getToken: () => Promise<string | null>
@@ -69,10 +104,21 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const newNote = await notesApi.createNote(noteData, getToken);
+
+      // Get the latest categories from the categories store
+      const categoriesState = useCategoriesStore.getState();
+      const categories = categoriesState.categories;
+
+      // Find the category for this note
+      const category = newNote.categoryId
+        ? categories.find((cat) => cat.id === newNote.categoryId) || null
+        : null;
+
       const noteWithCategory = {
         ...newNote,
-        category: newNote.category || null,
+        category: category,
       } as NoteWithCategory;
+
       const currentNotes = get().notes;
       set({
         notes: [noteWithCategory, ...currentNotes],
@@ -94,10 +140,21 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const updatedNote = await notesApi.updateNote(noteData, getToken);
+
+      // Get the latest categories from the categories store
+      const categoriesState = useCategoriesStore.getState();
+      const categories = categoriesState.categories;
+
+      // Find the category for this note
+      const category = updatedNote.categoryId
+        ? categories.find((cat) => cat.id === updatedNote.categoryId) || null
+        : null;
+
       const updatedNoteWithCategory = {
         ...updatedNote,
-        category: updatedNote.category || null,
+        category: category,
       } as NoteWithCategory;
+
       const currentNotes = get().notes;
       const updatedNotes = currentNotes.map((note) =>
         note.id === updatedNoteWithCategory.id ? updatedNoteWithCategory : note

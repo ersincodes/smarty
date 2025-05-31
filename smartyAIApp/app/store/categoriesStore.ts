@@ -31,10 +31,18 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
       const categories = await categoriesApi.getCategories(getToken);
       set({ categories: categories || [], isLoading: false });
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch categories";
+      console.log(
+        "⚠️ Unexpected error in categoriesStore.fetchCategories:",
+        errorMessage
+      );
+
+      // Set empty array for graceful error handling
       set({
-        error:
-          error instanceof Error ? error.message : "Failed to fetch categories",
+        categories: [],
         isLoading: false,
+        error: null, // Don't show error to user for missing endpoints
       });
     }
   },
@@ -45,7 +53,10 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
   ) => {
     set({ isLoading: true, error: null });
     try {
-      const newCategory = await categoriesApi.createCategory(name, getToken);
+      const newCategory = await categoriesApi.createCategory(
+        { name, color: "#007AFF" },
+        getToken
+      );
       const currentCategories = get().categories;
       set({
         categories: [...currentCategories, newCategory],

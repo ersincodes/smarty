@@ -41,7 +41,14 @@ const NotesScreen: React.FC = () => {
   const hasInitialized = useRef(false);
 
   const { getToken, signOut, isSignedIn } = useAuth();
-  const { notes, isLoading, error, fetchNotes, clearError } = useNotesStore();
+  const {
+    notes,
+    isLoading,
+    error,
+    fetchNotes,
+    clearError,
+    refreshNotesCategories,
+  } = useNotesStore();
   const { fetchCategories } = useCategoriesStore();
 
   useEffect(() => {
@@ -49,8 +56,10 @@ const NotesScreen: React.FC = () => {
       hasInitialized.current = true;
       const loadData = async () => {
         try {
-          await fetchNotes(getToken);
           await fetchCategories(getToken);
+          await fetchNotes(getToken);
+          // Refresh notes categories after both are loaded to ensure proper mapping
+          refreshNotesCategories();
         } catch (error) {
           console.error("Failed to load initial data:", error);
         }
@@ -72,12 +81,14 @@ const NotesScreen: React.FC = () => {
     if (!isSignedIn) return;
 
     try {
-      await fetchNotes(getToken);
       await fetchCategories(getToken);
+      await fetchNotes(getToken);
+      // Refresh notes categories after both are loaded to ensure proper mapping
+      refreshNotesCategories();
     } catch (error) {
       Alert.alert("Error", "Failed to refresh notes");
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, getToken]);
 
   const handleSignOut = useCallback(async () => {
     try {
