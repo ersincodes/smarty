@@ -116,62 +116,7 @@ export const handleApiError = (error: unknown): string => {
   return "An unexpected error occurred.";
 };
 
-// Enhanced API utility for trying multiple endpoint patterns
-const tryMultipleEndpoints = async <T>(
-  endpoints: string[],
-  headers: Record<string, string>,
-  method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
-  data?: any
-): Promise<T> => {
-  for (const endpoint of endpoints) {
-    try {
-      console.log(`🔍 Trying endpoint: ${method} ${endpoint}`);
-
-      const config: any = {
-        method,
-        url: endpoint,
-        headers,
-      };
-
-      if (data && (method === "POST" || method === "PUT")) {
-        config.data = data;
-      }
-
-      const response = await apiClient(config);
-
-      console.log(`✅ Success with ${endpoint}:`, response.status);
-
-      // Handle different response patterns from Next.js Route Handlers
-      let responseData = response.data;
-
-      // If it's wrapped in a success object, unwrap it
-      if (responseData && typeof responseData === "object") {
-        if ("data" in responseData) {
-          responseData = responseData.data;
-        }
-        // Handle potential Next.js App Router response patterns
-        if ("notes" in responseData) {
-          responseData = responseData.notes;
-        }
-        if ("categories" in responseData) {
-          responseData = responseData.categories;
-        }
-      }
-
-      return responseData;
-    } catch (error) {
-      console.log(
-        `❌ ${endpoint} failed:`,
-        error instanceof Error ? error.message : error
-      );
-      // Continue to next endpoint
-    }
-  }
-
-  throw new Error(`All endpoints failed: ${endpoints.join(", ")}`);
-};
-
-// Notes API - Updated with multiple endpoint patterns
+// Notes API - Updated to match your existing Next.js backend
 export const notesApi = {
   // Get all notes
   getNotes: async (getToken: () => Promise<string | null>): Promise<Note[]> => {
@@ -179,16 +124,13 @@ export const notesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log("🔐 Fetching notes with authentication");
 
-      // Try multiple endpoint patterns that might exist
-      const endpoints = [
-        "/notes", // Direct route handler (e.g., ENV.API_BASE_URL + "/notes")
-      ];
+      const response = await apiClient.get("/notes", { headers });
 
-      const notes = await tryMultipleEndpoints<Note[]>(
-        endpoints,
-        headers,
-        "GET"
-      );
+      // Handle the response format from your backend: { notes: [...] }
+      let notes = response.data;
+      if (notes && typeof notes === "object" && "notes" in notes) {
+        notes = notes.notes; // Unwrap { notes: [...] } format
+      }
 
       // Ensure we return an array
       const noteArray = Array.isArray(notes) ? notes : [];
@@ -205,7 +147,7 @@ export const notesApi = {
     }
   },
 
-  // Get specific note
+  // Get specific note - Your backend doesn't have this yet, so we'll skip it
   getNote: async (
     id: string,
     getToken: () => Promise<string | null>
@@ -214,22 +156,22 @@ export const notesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log(`🔐 Fetching note with ID: ${id}`);
 
-      const endpoints = [`/notes/${id}`]; // Target /api/notes/:id
+      // Since your backend doesn't have /notes/:id, we'll get all notes and filter
+      const allNotes = await notesApi.getNotes(getToken);
+      const note = allNotes.find((n) => n.id === id);
 
-      const note = await tryMultipleEndpoints<Note>(endpoints, headers, "GET");
+      if (!note) {
+        throw new Error("Note not found");
+      }
 
-      return {
-        ...note,
-        createdAt: new Date(note.createdAt),
-        updatedAt: new Date(note.updatedAt),
-      };
+      return note;
     } catch (error) {
       console.error(`❌ Failed to fetch note ${id}:`, error);
       throw error;
     }
   },
 
-  // Create note
+  // Create note - Match your backend's expected format
   createNote: async (
     noteData: CreateNoteInput,
     getToken: () => Promise<string | null>
@@ -238,14 +180,13 @@ export const notesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log("🔐 Creating new note:", noteData.title);
 
-      const endpoints = ["/notes"]; // Target /api/notes
+      const response = await apiClient.post("/notes", noteData, { headers });
 
-      const note = await tryMultipleEndpoints<Note>(
-        endpoints,
-        headers,
-        "POST",
-        noteData
-      );
+      // Handle the response format: { note: {...} }
+      let note = response.data;
+      if (note && typeof note === "object" && "note" in note) {
+        note = note.note; // Unwrap { note: {...} } format
+      }
 
       console.log("✅ Successfully created note");
       return {
@@ -259,7 +200,7 @@ export const notesApi = {
     }
   },
 
-  // Update note
+  // Update note - Match your backend's expected format (ID in body)
   updateNote: async (
     noteData: UpdateNoteInput,
     getToken: () => Promise<string | null>
@@ -268,15 +209,14 @@ export const notesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log(`🔐 Updating note: ${noteData.id}`);
 
-      const { id, ...updateData } = noteData;
-      const endpoints = [`/notes/${id}`]; // Target /api/notes/:id
+      // Your backend expects the full object including ID in the body
+      const response = await apiClient.put("/notes", noteData, { headers });
 
-      const note = await tryMultipleEndpoints<Note>(
-        endpoints,
-        headers,
-        "PUT",
-        updateData
-      );
+      // Handle the response format: { note: {...} }
+      let note = response.data;
+      if (note && typeof note === "object" && "note" in note) {
+        note = note.note; // Unwrap { note: {...} } format
+      }
 
       console.log("✅ Successfully updated note");
       return {
@@ -290,7 +230,7 @@ export const notesApi = {
     }
   },
 
-  // Delete note
+  // Delete note - Match your backend's expected format (ID in body)
   deleteNote: async (
     id: string,
     getToken: () => Promise<string | null>
@@ -299,9 +239,11 @@ export const notesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log(`🔐 Deleting note: ${id}`);
 
-      const endpoints = [`/notes/${id}`]; // Target /api/notes/:id
-
-      await tryMultipleEndpoints<void>(endpoints, headers, "DELETE");
+      // Your backend expects { id } in the request body
+      await apiClient.delete("/notes", {
+        headers,
+        data: { id }, // Send ID in body, not URL
+      });
 
       console.log("✅ Successfully deleted note");
     } catch (error) {
@@ -325,19 +267,34 @@ export const notesApi = {
         `/search/notes?q=${encodedQuery}`, // Alternative /api/search/notes...
       ];
 
-      const notes = await tryMultipleEndpoints<Note[]>(
-        endpoints,
-        headers,
-        "GET"
-      );
-      const noteArray = Array.isArray(notes) ? notes : [];
+      // Try first endpoint
+      try {
+        const response = await apiClient.get(endpoints[0], { headers });
+        let notes = response.data;
 
-      console.log(`✅ Found ${noteArray.length} notes matching query`);
-      return noteArray.map((note) => ({
-        ...note,
-        createdAt: new Date(note.createdAt),
-        updatedAt: new Date(note.updatedAt),
-      }));
+        if (notes && typeof notes === "object" && "notes" in notes) {
+          notes = notes.notes;
+        }
+
+        const noteArray = Array.isArray(notes) ? notes : [];
+        console.log(`✅ Found ${noteArray.length} notes matching query`);
+        return noteArray.map((note) => ({
+          ...note,
+          createdAt: new Date(note.createdAt),
+          updatedAt: new Date(note.updatedAt),
+        }));
+      } catch (error) {
+        // If search endpoint doesn't exist, filter existing notes
+        console.log("🔍 Search endpoint not available, filtering locally");
+        const allNotes = await notesApi.getNotes(getToken);
+        const filteredNotes = allNotes.filter(
+          (note) =>
+            note.title.toLowerCase().includes(query.toLowerCase()) ||
+            note.content.toLowerCase().includes(query.toLowerCase())
+        );
+        console.log(`✅ Found ${filteredNotes.length} notes matching query`);
+        return filteredNotes;
+      }
     } catch (error) {
       console.error("❌ Failed to search notes:", error);
       throw error;
@@ -345,7 +302,7 @@ export const notesApi = {
   },
 };
 
-// Categories API - Updated with multiple endpoint patterns
+// Categories API - Keep existing format since categories might work
 export const categoriesApi = {
   // Get all categories
   getCategories: async (
@@ -355,16 +312,17 @@ export const categoriesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log("🔐 Fetching categories with authentication");
 
-      const endpoints = [
-        "/categories", // Target /api/categories
-        "/categories/list", // Alternative /api/categories/list
-      ];
+      const response = await apiClient.get("/categories", { headers });
 
-      const categories = await tryMultipleEndpoints<Category[]>(
-        endpoints,
-        headers,
-        "GET"
-      );
+      let categories = response.data;
+      if (
+        categories &&
+        typeof categories === "object" &&
+        "categories" in categories
+      ) {
+        categories = categories.categories;
+      }
+
       const categoryArray = Array.isArray(categories) ? categories : [];
 
       console.log(`✅ Successfully fetched ${categoryArray.length} categories`);
@@ -388,14 +346,14 @@ export const categoriesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log("🔐 Creating new category:", categoryData.name);
 
-      const endpoints = ["/categories"]; // Target /api/categories
-
-      const category = await tryMultipleEndpoints<Category>(
-        endpoints,
+      const response = await apiClient.post("/categories", categoryData, {
         headers,
-        "POST",
-        categoryData
-      );
+      });
+
+      let category = response.data;
+      if (category && typeof category === "object" && "category" in category) {
+        category = category.category;
+      }
 
       console.log("✅ Successfully created category");
       return {
@@ -419,14 +377,17 @@ export const categoriesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log(`🔐 Updating category: ${id}`);
 
-      const endpoints = [`/categories/${id}`]; // Target /api/categories/:id
-
-      const category = await tryMultipleEndpoints<Category>(
-        endpoints,
-        headers,
-        "PUT",
-        categoryData
+      // Assuming similar pattern to notes
+      const response = await apiClient.put(
+        "/categories",
+        { id, ...categoryData },
+        { headers }
       );
+
+      let category = response.data;
+      if (category && typeof category === "object" && "category" in category) {
+        category = category.category;
+      }
 
       console.log("✅ Successfully updated category");
       return {
@@ -449,9 +410,11 @@ export const categoriesApi = {
       const headers = await getAuthHeaders(getToken);
       console.log(`🔐 Deleting category: ${id}`);
 
-      const endpoints = [`/categories/${id}`]; // Target /api/categories/:id
-
-      await tryMultipleEndpoints<void>(endpoints, headers, "DELETE");
+      // Similar pattern to notes - ID in body
+      await apiClient.delete("/categories", {
+        headers,
+        data: { id },
+      });
 
       console.log("✅ Successfully deleted category");
     } catch (error) {
@@ -461,7 +424,7 @@ export const categoriesApi = {
   },
 };
 
-// Chat API - Updated with multiple endpoint patterns
+// Chat API - Keep existing since it might work
 export const chatApi = {
   // Send chat message
   sendMessage: async (
@@ -477,16 +440,17 @@ export const chatApi = {
         "/ai/chat", // Alternative /api/ai/chat
       ];
 
-      const response = await tryMultipleEndpoints<{
-        content: string;
-        relatedNotes?: Note[];
-      }>(endpoints, headers, "POST", { messages });
+      const response = await apiClient.post(
+        endpoints[0],
+        { messages },
+        { headers }
+      );
 
       console.log("✅ Successfully received AI response");
       return {
-        content: response.content,
+        content: response.data.content,
         relatedNotes:
-          response.relatedNotes?.map((note) => ({
+          response.data.relatedNotes?.map((note: any) => ({
             ...note,
             createdAt: new Date(note.createdAt),
             updatedAt: new Date(note.updatedAt),
@@ -512,15 +476,14 @@ export const chatApi = {
         "/ai/suggestions", // Target /api/ai/suggestions
       ];
 
-      const response = await tryMultipleEndpoints<{ suggestions: string[] }>(
-        endpoints,
-        headers,
-        "POST",
-        { prompt }
+      const response = await apiClient.post(
+        endpoints[0],
+        { prompt },
+        { headers }
       );
 
       console.log("✅ Successfully received AI suggestions");
-      return response;
+      return response.data;
     } catch (error) {
       console.error("❌ Failed to get AI suggestions:", error);
       throw error;
