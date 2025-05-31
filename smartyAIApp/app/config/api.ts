@@ -328,8 +328,12 @@ export const categoriesApi = {
       console.log(`✅ Successfully fetched ${categoryArray.length} categories`);
       return categoryArray.map((category) => ({
         ...category,
-        createdAt: new Date(category.createdAt),
-        updatedAt: new Date(category.updatedAt),
+        createdAt: category.createdAt
+          ? new Date(category.createdAt)
+          : new Date(),
+        updatedAt: category.updatedAt
+          ? new Date(category.updatedAt)
+          : new Date(),
       }));
     } catch (error) {
       console.error("❌ Failed to fetch categories:", error);
@@ -358,8 +362,12 @@ export const categoriesApi = {
       console.log("✅ Successfully created category");
       return {
         ...category,
-        createdAt: new Date(category.createdAt),
-        updatedAt: new Date(category.updatedAt),
+        createdAt: category.createdAt
+          ? new Date(category.createdAt)
+          : new Date(),
+        updatedAt: category.updatedAt
+          ? new Date(category.updatedAt)
+          : new Date(),
       };
     } catch (error) {
       console.error("❌ Failed to create category:", error);
@@ -392,8 +400,12 @@ export const categoriesApi = {
       console.log("✅ Successfully updated category");
       return {
         ...category,
-        createdAt: new Date(category.createdAt),
-        updatedAt: new Date(category.updatedAt),
+        createdAt: category.createdAt
+          ? new Date(category.createdAt)
+          : new Date(),
+        updatedAt: category.updatedAt
+          ? new Date(category.updatedAt)
+          : new Date(),
       };
     } catch (error) {
       console.error("❌ Failed to update category:", error);

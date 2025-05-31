@@ -12,12 +12,13 @@ import {
   TouchableOpacity,
   Dimensions,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { Button, ActivityIndicator } from "react-native-paper";
+import { Button } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { useAuth } from "@clerk/clerk-expo";
 import {
@@ -45,6 +46,7 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCategoriesLoaded, setIsCategoriesLoaded] = useState(false);
 
   const insets = useSafeAreaInsets();
   const { getToken } = useAuth();
@@ -58,25 +60,53 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      // Fetch categories when modal opens - safe to not include fetchCategories in deps
-      // since we only want this to run when modal becomes visible
-      if (getToken) {
-        fetchCategories(getToken).catch((error) => {
-          console.error("Failed to fetch categories:", error);
-        });
-      }
+      // Reset categories loaded state
+      setIsCategoriesLoaded(false);
+
+      // Fetch categories when modal opens
+      const loadCategories = async () => {
+        if (getToken) {
+          try {
+            await fetchCategories(getToken);
+            setIsCategoriesLoaded(true);
+            // Don't log categories here as state hasn't updated yet
+          } catch (error) {
+            console.error("Failed to fetch categories:", error);
+            setIsCategoriesLoaded(true); // Set to true even on error to prevent infinite loading
+          }
+        }
+      };
+
+      loadCategories();
 
       if (noteToEdit) {
         setTitle(noteToEdit.title);
         setContent(noteToEdit.content || "");
-        setCategoryId(noteToEdit.categoryId);
+        setCategoryId(noteToEdit.categoryId || null);
       } else {
         setTitle("");
         setContent("");
         setCategoryId(null);
       }
     }
-  }, [visible, noteToEdit]); // Only depend on visible and noteToEdit
+  }, [visible, noteToEdit]);
+
+  // Add a separate useEffect to log categories when they change
+  useEffect(() => {
+    if (visible && isCategoriesLoaded) {
+      console.log("Current categories in modal:", categories);
+      console.log("Categories count:", categories?.length || 0);
+
+      // Also log if the selected categoryId exists in the categories
+      if (categoryId) {
+        const selectedCategory = categories?.find((c) => c.id === categoryId);
+        console.log(
+          "Selected category:",
+          selectedCategory?.name || "Not found"
+        );
+      }
+    }
+  }, [categories, visible, isCategoriesLoaded, categoryId]);
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
@@ -224,24 +254,95 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                   {/* Category Selector */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Category</Text>
-                    <View style={styles.pickerWrapper}>
-                      <Picker
-                        selectedValue={categoryId ?? "none"}
-                        onValueChange={(value: string) =>
-                          setCategoryId(value === "none" ? null : value)
-                        }
-                        enabled={!categoriesLoading}
-                        style={styles.picker}>
-                        <Picker.Item label="No Category" value="none" />
-                        {categories?.map((category) => (
-                          <Picker.Item
-                            key={category.id}
-                            label={category.name}
-                            value={category.id}
-                          />
-                        )) || []}
-                      </Picker>
-                    </View>
+                    {Platform.OS === "ios" ? (
+                      // iOS-specific implementation
+                      <TouchableOpacity
+                        style={styles.categorySelector}
+                        onPress={() => {
+                          // Check if there are categories
+                          if (!categories || categories.length === 0) {
+                            Alert.alert(
+                              "No Categories",
+                              "No categories available. You can create categories from the main menu.",
+                              [{ text: "OK" }]
+                            );
+                            return;
+                          }
+
+                          // For iOS, we'll show action sheet or modal picker
+                          Alert.alert(
+                            "Select Category",
+                            "Choose a category for your note",
+                            [
+                              {
+                                text: "No Category",
+                                onPress: () => setCategoryId(null),
+                              },
+                              ...(categories?.map((category) => ({
+                                text: category.name,
+                                onPress: () => setCategoryId(category.id),
+                              })) || []),
+                              { text: "Cancel", style: "cancel" },
+                            ]
+                          );
+                        }}
+                        disabled={categoriesLoading && !isCategoriesLoaded}>
+                        <Text
+                          style={[
+                            styles.categorySelectorText,
+                            !categoryId && styles.categorySelectorPlaceholder,
+                          ]}>
+                          {categoriesLoading && !isCategoriesLoaded
+                            ? "Loading categories..."
+                            : categoryId
+                            ? categories?.find((c) => c.id === categoryId)
+                                ?.name || "Select Category"
+                            : categories && categories.length === 0
+                            ? "No categories available"
+                            : "Select Category"}
+                        </Text>
+                        <Text style={styles.categorySelectorArrow}>▼</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      // Android implementation with Picker
+                      <View style={styles.pickerWrapper}>
+                        {categoriesLoading && !isCategoriesLoaded ? (
+                          <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#007AFF" />
+                            <Text style={styles.loadingText}>
+                              Loading categories...
+                            </Text>
+                          </View>
+                        ) : categories && categories.length === 0 ? (
+                          <View style={styles.noCategoriesContainer}>
+                            <Text style={styles.noCategoriesText}>
+                              No categories available
+                            </Text>
+                          </View>
+                        ) : (
+                          <Picker
+                            selectedValue={categoryId ?? "none"}
+                            onValueChange={(value: string) =>
+                              setCategoryId(value === "none" ? null : value)
+                            }
+                            enabled={!categoriesLoading || isCategoriesLoaded}
+                            style={styles.picker}
+                            itemStyle={styles.pickerItem}>
+                            <Picker.Item label="No Category" value="none" />
+                            {categories?.map((category) => (
+                              <Picker.Item
+                                key={category.id}
+                                label={category.name}
+                                value={category.id}
+                                color={
+                                  Platform.OS === "ios" ? undefined : "#1A1A1A"
+                                }
+                              />
+                            )) || []}
+                          </Picker>
+                        )}
+                      </View>
+                    )}
                   </View>
 
                   {/* Title Input */}
@@ -404,9 +505,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   picker: {
-    height: 50,
+    height: Platform.OS === "ios" ? 180 : 50,
     color: "#1A1A1A",
     backgroundColor: "transparent",
+  },
+  pickerItem: {
+    fontSize: 16,
+    height: Platform.OS === "ios" ? 150 : undefined,
   },
   titleInput: {
     backgroundColor: "#F8F9FA",
@@ -444,6 +549,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  categorySelector: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  categorySelectorText: {
+    fontSize: 16,
+    color: "#1A1A1A",
+    flex: 1,
+  },
+  categorySelectorPlaceholder: {
+    color: "#A0A0A0",
+  },
+  categorySelectorArrow: {
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+  },
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#666",
+  },
+  noCategoriesContainer: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  noCategoriesText: {
+    fontSize: 16,
+    color: "#A0A0A0",
+    textAlign: "center",
   },
 });
 
