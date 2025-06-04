@@ -46,6 +46,7 @@ export interface UpdateNoteInput extends UpdateNoteRequest {
 }
 
 export interface ChatMessage {
+  id?: string; // Optional id for local message tracking
   role: "user" | "assistant" | "system";
   content: string;
 }

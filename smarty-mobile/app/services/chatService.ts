@@ -1,38 +1,37 @@
-import { ChatMessage } from "../types";
+import { ChatMessage, Note } from "../types";
 import { chatApi, handleApiError } from "../config/api";
 
 class ChatService {
   /**
-   * Send a message and get streaming response
+   * Send a message and get response
    * @param messages - Array of chat messages
    * @param getToken - Function to get auth token
-   * @param onChunk - Optional callback for streaming chunks
-   * @returns Promise resolving to the complete response
+   * @returns Promise resolving to the complete response with content and related notes
    */
   async sendMessage(
     messages: ChatMessage[],
-    getToken: () => Promise<string | null>,
-    onChunk?: (chunk: string) => void
-  ): Promise<string> {
+    getToken: () => Promise<string | null>
+  ): Promise<{ content: string; relatedNotes?: Note[] }> {
     try {
-      return await chatApi.sendMessage(messages, getToken, onChunk);
+      return await chatApi.sendMessage(messages, getToken);
     } catch (error) {
       throw new Error(handleApiError(error));
     }
   }
 
   /**
-   * Send a message without streaming (simpler version)
+   * Send a message and get only the content string
    * @param messages - Array of chat messages
    * @param getToken - Function to get auth token
-   * @returns Promise resolving to the complete response
+   * @returns Promise resolving to the content string
    */
   async sendMessageSimple(
     messages: ChatMessage[],
     getToken: () => Promise<string | null>
   ): Promise<string> {
     try {
-      return await chatApi.sendMessageSimple(messages, getToken);
+      const response = await chatApi.sendMessage(messages, getToken);
+      return response.content;
     } catch (error) {
       throw new Error(handleApiError(error));
     }

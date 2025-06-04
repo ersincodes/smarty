@@ -11,7 +11,7 @@ function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
 }
 
 export default function TabLayout() {
@@ -20,12 +20,25 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "#8E8E93",
+        tabBarActiveTintColor: Colors.primary[600],
+        tabBarInactiveTintColor: Colors.text.tertiary,
         tabBarStyle: {
-          backgroundColor: "white",
-          borderTopColor: "#E5E5EA",
+          backgroundColor: Colors.background.primary,
+          borderTopColor: Colors.gray[200],
           borderTopWidth: 1,
+          height: 84,
+          paddingTop: 8,
+          paddingBottom: 28,
+          shadowColor: Colors.gray[900],
+          shadowOffset: { width: 0, height: -1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 3,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+          marginTop: 4,
         },
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.
@@ -38,6 +51,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="sticky-note" color={color} />
           ),
+          tabBarAccessibilityLabel: "Notes tab",
         }}
       />
       <Tabs.Screen
@@ -47,6 +61,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="info-circle" color={color} />
           ),
+          tabBarAccessibilityLabel: "About tab",
         }}
       />
     </Tabs>
