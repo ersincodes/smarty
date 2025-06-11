@@ -9,13 +9,10 @@ const WelcomeScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoEmoji}>🧠</Text>
             <Text style={styles.logoText}>Smarty</Text>
           </View>
 
-          <Text style={styles.subtitle}>
-            An intelligent self-development app with AI integration
-          </Text>
+          <Text style={styles.subtitle}>Note Management & Personal Growth</Text>
         </View>
 
         <View style={styles.content}>
@@ -99,16 +96,26 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   logoText: {
-    fontSize: 48,
-    fontWeight: "bold",
-    color: "#007AFF",
+    fontSize: 56,
+    fontWeight: "900",
+    color: "#1D4ED8",
+    letterSpacing: -2.2,
+    textShadowColor: "rgba(29, 78, 216, 0.25)",
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 8,
+    fontFamily: "System",
+    textTransform: "none",
+    includeFontPadding: false,
   },
   subtitle: {
-    fontSize: 18,
-    color: "#666",
+    fontSize: 19,
+    color: "#1E40AF",
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 26,
     paddingHorizontal: 20,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+    opacity: 0.95,
   },
   content: {
     flex: 1,

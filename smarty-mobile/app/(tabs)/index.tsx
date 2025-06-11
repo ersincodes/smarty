@@ -13,12 +13,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Appbar,
-  FAB,
-  Portal,
   Searchbar,
   ActivityIndicator,
   Snackbar,
   Button,
+  FAB,
 } from "react-native-paper";
 import { useAuth } from "@clerk/clerk-expo";
 import { useNotesStore } from "../store/notesStore";
@@ -27,20 +26,17 @@ import { useCategoriesStore } from "../store/categoriesStore";
 import { NoteWithCategory } from "../types";
 import Note from "../../components/Note";
 import AddEditNoteModal from "../../components/AddEditNoteModal";
-import AIChatModal from "../../components/AIChatModal";
 import BackendConnectionTest from "../components/BackendConnectionTest";
 import Colors from "../../constants/Colors";
 
 const NotesScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showChatModal, setShowChatModal] = useState(false);
   const [showConnectionTest, setShowConnectionTest] = useState(false);
   const [selectedNote, setSelectedNote] = useState<NoteWithCategory | null>(
     null
   );
   const [showEditModal, setShowEditModal] = useState(false);
-  const [fabOpen, setFabOpen] = useState(false);
+  const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
   const hasInitialized = useRef(false);
 
   const { getToken, signOut, isSignedIn } = useAuth();
@@ -111,58 +107,25 @@ const NotesScreen: React.FC = () => {
     setSelectedNote(null);
   }, []);
 
-  const handleCloseAddModal = useCallback(() => {
-    setShowAddModal(false);
+  const handleNoteExpand = useCallback((noteId: string) => {
+    setExpandedNoteId(noteId);
   }, []);
 
-  const handleCloseChatModal = useCallback(() => {
-    setShowChatModal(false);
-  }, []);
-
-  /*
-  const handleTestApiEndpoints = useCallback(async () => {
-    if (!isSignedIn) {
-      Alert.alert("Error", "Please sign in first");
-      return;
-    }
-
-    console.log("🚀 Starting comprehensive API testing...");
-    try {
-      // Import the new exploration function
-      // const { exploreBackendRoutes } = await import("../config/api");
-
-      // Run both comprehensive testing and backend exploration
-      // await exploreBackendRoutes(getToken);
-      // await testApiEndpoints(getToken);
-
-      Alert.alert(
-        "Debug Complete",
-        "Check console for detailed API test results. Look for working endpoints and proper response formats.",
-        [
-          {
-            text: "View Console",
-            onPress: () =>
-              console.log("💡 Check the console for detailed results!"),
-          },
-          { text: "OK", style: "default" },
-        ]
-      );
-    } catch (error) {
-      console.error("API testing failed:", error);
-      Alert.alert("Error", "API testing failed - check console for details");
-    }
-  }, [isSignedIn, getToken]);
-  */
-
-  const handleFabStateChange = useCallback(({ open }: { open: boolean }) => {
-    setFabOpen(open);
+  const handleNoteCollapse = useCallback(() => {
+    setExpandedNoteId(null);
   }, []);
 
   const renderNote = useCallback(
     ({ item }: { item: NoteWithCategory }) => (
-      <Note note={item} onPress={() => handleNotePress(item)} />
+      <Note
+        note={item}
+        onPress={() => handleNotePress(item)}
+        isExpanded={expandedNoteId === item.id}
+        onExpand={() => handleNoteExpand(item.id)}
+        onCollapse={handleNoteCollapse}
+      />
     ),
-    [handleNotePress]
+    [handleNotePress, expandedNoteId, handleNoteExpand, handleNoteCollapse]
   );
 
   const renderEmptyState = () => (
@@ -179,15 +142,9 @@ const NotesScreen: React.FC = () => {
           : "Capture your thoughts, ideas, and inspiration. Your first note is just a tap away."}
       </Text>
       {!searchQuery && notes.length === 0 && !isLoading && (
-        <View style={styles.emptyStateActions}>
-          <Button
-            mode="contained"
-            onPress={() => setShowAddModal(true)}
-            style={styles.createFirstNoteButton}
-            labelStyle={styles.createFirstNoteButtonText}
-            accessibilityLabel="Create your first note">
-            Create First Note
-          </Button>
+        <View style={styles.emptyStateLoader}>
+          <ActivityIndicator size="large" color={Colors.primary[500]} />
+          <Text style={styles.emptyStateLoaderText}>Setting things up...</Text>
         </View>
       )}
     </View>
@@ -211,7 +168,8 @@ const NotesScreen: React.FC = () => {
               <View style={styles.titleTextContainer}>
                 <Text style={styles.appTitle}>Smarty</Text>
                 <Text style={styles.appSubtitle}>
-                  {notes.length} {notes.length === 1 ? "note" : "notes"}
+                  AI-Powered Intelligence • {notes.length}{" "}
+                  {notes.length === 1 ? "note" : "notes"}
                 </Text>
               </View>
             </View>
@@ -247,16 +205,6 @@ const NotesScreen: React.FC = () => {
       {renderHeader()}
 
       <View style={styles.content}>
-        {/* Backend Status Info */}
-        {notes.length === 0 && !isLoading && !error && !searchQuery && (
-          <View style={styles.statusBanner}>
-            <Text style={styles.statusEmoji}>🔧</Text>
-            <Text style={styles.statusText}>
-              Backend setup in progress. Local notes are working perfectly!
-            </Text>
-          </View>
-        )}
-
         {/* Error State */}
         {error && (
           <View style={styles.errorContainer}>
@@ -299,70 +247,11 @@ const NotesScreen: React.FC = () => {
           ))}
       </View>
 
-      <Portal>
-        <FAB.Group
-          open={fabOpen}
-          visible
-          icon={fabOpen ? "close" : "plus"}
-          actions={[
-            {
-              icon: "robot",
-              label: "AI Chat",
-              onPress: () => {
-                setShowChatModal(true);
-                setFabOpen(false);
-              },
-              style: styles.fabAction,
-              labelStyle: styles.fabActionLabel,
-            },
-            {
-              icon: "note-plus",
-              label: "Add Note",
-              onPress: () => {
-                setShowAddModal(true);
-                setFabOpen(false);
-              },
-              style: styles.fabAction,
-              labelStyle: styles.fabActionLabel,
-            },
-          ]}
-          onStateChange={handleFabStateChange}
-          fabStyle={styles.fab}
-        />
-      </Portal>
-
-      <AddEditNoteModal
-        visible={showAddModal}
-        onDismiss={handleCloseAddModal}
-      />
-
       <AddEditNoteModal
         visible={showEditModal}
         onDismiss={handleCloseEditModal}
         noteToEdit={selectedNote}
       />
-
-      <AIChatModal visible={showChatModal} onDismiss={handleCloseChatModal} />
-
-      {/* Backend Connection Test Modal */}
-      {/*
-      <Portal>
-        <Modal
-          visible={showConnectionTest}
-          onDismiss={() => setShowConnectionTest(false)}
-          style={styles.connectionTestModal}>
-          <View style={styles.connectionTestContent}>
-            <BackendConnectionTest />
-            <Button
-              mode="outlined"
-              onPress={() => setShowConnectionTest(false)}
-              style={styles.closeTestButton}>
-              Close Test
-            </Button>
-          </View>
-        </Modal>
-      </Portal>
-      */}
 
       <Snackbar
         visible={!!error}
@@ -375,6 +264,17 @@ const NotesScreen: React.FC = () => {
         }}>
         {error}
       </Snackbar>
+
+      {/* Floating Collapse Button */}
+      {expandedNoteId && (
+        <FAB
+          icon="chevron-up"
+          style={styles.collapseButton}
+          onPress={handleNoteCollapse}
+          accessibilityLabel="Collapse expanded note"
+          accessibilityHint="Tap to collapse the currently expanded note"
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -420,16 +320,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   appTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: Colors.primary[600],
-    letterSpacing: -0.5,
+    fontSize: 36,
+    fontWeight: "900",
+    color: Colors.primary[700],
+    letterSpacing: -1.8,
+    textShadowColor: Colors.intelligence.glow,
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+    fontFamily: "System",
+    textTransform: "none",
+    textDecorationLine: "none",
+    includeFontPadding: false,
   },
   appSubtitle: {
-    fontSize: 14,
-    color: Colors.text.tertiary,
-    marginTop: 2,
-    fontWeight: "500",
+    fontSize: 13,
+    color: Colors.intelligence[600],
+    marginTop: 1,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+    opacity: 0.9,
   },
   searchContainer: {
     marginHorizontal: -4,
@@ -466,11 +375,11 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingVertical: 12,
-    paddingBottom: 100, // Extra space for FAB
+    paddingBottom: 20,
   },
   emptyListContainer: {
     flex: 1,
-    paddingBottom: 100, // Extra space for FAB
+    paddingBottom: 20,
   },
   emptyState: {
     flex: 1,
@@ -502,32 +411,18 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     maxWidth: 280,
   },
-  emptyStateActions: {
+  emptyStateLoader: {
     marginTop: 32,
+    alignItems: "center",
   },
-  createFirstNoteButton: {
-    backgroundColor: Colors.primary[500],
-    borderRadius: 12,
-    paddingVertical: 4,
-  },
-  createFirstNoteButtonText: {
+  emptyStateLoaderText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: Colors.text.inverse,
+    color: Colors.text.secondary,
+    fontWeight: "500",
+    marginTop: 12,
+    textAlign: "center",
   },
-  fab: {
-    backgroundColor: Colors.primary[500],
-    borderRadius: 16,
-  },
-  fabAction: {
-    backgroundColor: Colors.primary[500],
-    borderRadius: 12,
-  },
-  fabActionLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.text.primary,
-  },
+
   snackbar: {
     backgroundColor: Colors.error[500],
     marginBottom: 16,
@@ -598,6 +493,18 @@ const styles = StyleSheet.create({
     marginTop: 16,
     backgroundColor: "transparent",
     borderColor: Colors.primary[500],
+  },
+  collapseButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 16,
+    backgroundColor: Colors.primary[600],
+    borderRadius: 28,
+    elevation: 6,
+    shadowColor: Colors.gray[900],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
 });
 

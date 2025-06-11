@@ -11,7 +11,6 @@ import {
   Modal,
   TouchableOpacity,
   Dimensions,
-  StatusBar,
   ActivityIndicator,
 } from "react-native";
 import {
@@ -189,209 +188,188 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
     <Modal
       visible={visible}
       animationType="slide"
-      transparent={true}
-      presentationStyle="overFullScreen"
+      transparent={false}
+      presentationStyle="pageSheet"
       onRequestClose={onDismiss}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="rgba(0, 0, 0, 0.5)"
-      />
-      <View style={styles.modalContainer}>
-        <TouchableOpacity
-          style={styles.backdrop}
-          activeOpacity={1}
-          onPress={handleBackdropPress}
-        />
+      <SafeAreaView style={styles.modalContainer} edges={["top", "bottom"]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onDismiss} style={styles.cancelButton}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
 
+          <Text style={styles.headerTitle}>
+            {noteToEdit ? "Edit Note" : "Add Note"}
+          </Text>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={isSubmitting || !title.trim()}
+            style={[
+              styles.saveButton,
+              (!title.trim() || isSubmitting) && styles.saveButtonDisabled,
+            ]}>
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles.saveText}>
+                {noteToEdit ? "Update" : "Create"}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Form Content */}
         <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardAvoidingView}>
-          <SafeAreaView style={styles.safeAreaContainer} edges={["bottom"]}>
-            <View
-              style={[
-                styles.modalContent,
-                { paddingBottom: Math.max(insets.bottom, 20) },
-              ]}>
-              {/* Handle Bar */}
-              <View style={styles.handleBar} />
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            keyboardShouldPersistTaps="handled">
+            <View style={styles.formContainer}>
+              {/* Category Selector */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Category</Text>
+                {Platform.OS === "ios" ? (
+                  // iOS-specific implementation
+                  <TouchableOpacity
+                    style={styles.categorySelector}
+                    onPress={() => {
+                      // Check if there are categories
+                      if (!categories || categories.length === 0) {
+                        Alert.alert(
+                          "No Categories",
+                          "No categories available. You can create categories from the main menu.",
+                          [{ text: "OK" }]
+                        );
+                        return;
+                      }
 
-              {/* Header */}
-              <View style={styles.header}>
-                <TouchableOpacity
-                  onPress={onDismiss}
-                  style={styles.cancelButton}>
-                  <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.headerTitle}>
-                  {noteToEdit ? "Edit Note" : "Add Note"}
-                </Text>
-
-                <TouchableOpacity
-                  onPress={handleSubmit}
-                  disabled={isSubmitting || !title.trim()}
-                  style={[
-                    styles.saveButton,
-                    (!title.trim() || isSubmitting) &&
-                      styles.saveButtonDisabled,
-                  ]}>
-                  {isSubmitting ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <Text style={styles.saveText}>
-                      {noteToEdit ? "Update" : "Create"}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Form Content */}
-              <ScrollView
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={false}
-                bounces={false}>
-                <View style={styles.formContainer}>
-                  {/* Category Selector */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Category</Text>
-                    {Platform.OS === "ios" ? (
-                      // iOS-specific implementation
-                      <TouchableOpacity
-                        style={styles.categorySelector}
-                        onPress={() => {
-                          // Check if there are categories
-                          if (!categories || categories.length === 0) {
-                            Alert.alert(
-                              "No Categories",
-                              "No categories available. You can create categories from the main menu.",
-                              [{ text: "OK" }]
-                            );
-                            return;
-                          }
-
-                          // For iOS, we'll show action sheet or modal picker
-                          Alert.alert(
-                            "Select Category",
-                            "Choose a category for your note",
-                            [
-                              {
-                                text: "No Category",
-                                onPress: () => setCategoryId(null),
-                              },
-                              ...(categories?.map((category) => ({
-                                text: category.name,
-                                onPress: () => setCategoryId(category.id),
-                              })) || []),
-                              { text: "Cancel", style: "cancel" },
-                            ]
-                          );
-                        }}
-                        disabled={categoriesLoading && !isCategoriesLoaded}>
-                        <Text
-                          style={[
-                            styles.categorySelectorText,
-                            !categoryId && styles.categorySelectorPlaceholder,
-                          ]}>
-                          {categoriesLoading && !isCategoriesLoaded
-                            ? "Loading categories..."
-                            : categoryId
-                            ? categories?.find((c) => c.id === categoryId)
-                                ?.name || "Select Category"
-                            : categories && categories.length === 0
+                      // For iOS, we'll show action sheet or modal picker
+                      Alert.alert(
+                        "Select Category",
+                        "Choose a category for your note",
+                        [
+                          {
+                            text: "No Category",
+                            onPress: () => setCategoryId(null),
+                          },
+                          ...(categories?.map((category) => ({
+                            text: category.name,
+                            onPress: () => setCategoryId(category.id),
+                          })) || []),
+                          { text: "Cancel", style: "cancel" },
+                        ]
+                      );
+                    }}
+                    disabled={categoriesLoading && !isCategoriesLoaded}>
+                    <Text
+                      style={[
+                        styles.categorySelectorText,
+                        !categoryId && styles.categorySelectorPlaceholder,
+                      ]}>
+                      {categoriesLoading && !isCategoriesLoaded
+                        ? "Loading categories..."
+                        : categoryId
+                          ? categories?.find((c) => c.id === categoryId)
+                              ?.name || "Select Category"
+                          : categories && categories.length === 0
                             ? "No categories available"
                             : "Select Category"}
+                    </Text>
+                    <Text style={styles.categorySelectorArrow}>▼</Text>
+                  </TouchableOpacity>
+                ) : (
+                  // Android implementation with Picker
+                  <View style={styles.pickerWrapper}>
+                    {categoriesLoading && !isCategoriesLoaded ? (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color="#007AFF" />
+                        <Text style={styles.loadingText}>
+                          Loading categories...
                         </Text>
-                        <Text style={styles.categorySelectorArrow}>▼</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      // Android implementation with Picker
-                      <View style={styles.pickerWrapper}>
-                        {categoriesLoading && !isCategoriesLoaded ? (
-                          <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color="#007AFF" />
-                            <Text style={styles.loadingText}>
-                              Loading categories...
-                            </Text>
-                          </View>
-                        ) : categories && categories.length === 0 ? (
-                          <View style={styles.noCategoriesContainer}>
-                            <Text style={styles.noCategoriesText}>
-                              No categories available
-                            </Text>
-                          </View>
-                        ) : (
-                          <Picker
-                            selectedValue={categoryId ?? "none"}
-                            onValueChange={(value: string) =>
-                              setCategoryId(value === "none" ? null : value)
-                            }
-                            enabled={!categoriesLoading || isCategoriesLoaded}
-                            style={styles.picker}
-                            itemStyle={styles.pickerItem}>
-                            <Picker.Item label="No Category" value="none" />
-                            {categories?.map((category) => (
-                              <Picker.Item
-                                key={category.id}
-                                label={category.name}
-                                value={category.id}
-                                color={
-                                  Platform.OS === "ios" ? undefined : "#1A1A1A"
-                                }
-                              />
-                            )) || []}
-                          </Picker>
-                        )}
                       </View>
+                    ) : categories && categories.length === 0 ? (
+                      <View style={styles.noCategoriesContainer}>
+                        <Text style={styles.noCategoriesText}>
+                          No categories available
+                        </Text>
+                      </View>
+                    ) : (
+                      <Picker
+                        selectedValue={categoryId ?? "none"}
+                        onValueChange={(value: string) =>
+                          setCategoryId(value === "none" ? null : value)
+                        }
+                        enabled={!categoriesLoading || isCategoriesLoaded}
+                        style={styles.picker}
+                        itemStyle={styles.pickerItem}>
+                        <Picker.Item label="No Category" value="none" />
+                        {categories?.map((category) => (
+                          <Picker.Item
+                            key={category.id}
+                            label={category.name}
+                            value={category.id}
+                            color={
+                              Platform.OS === "ios" ? undefined : "#1A1A1A"
+                            }
+                          />
+                        )) || []}
+                      </Picker>
                     )}
                   </View>
+                )}
+              </View>
 
-                  {/* Title Input */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Title</Text>
-                    <TextInput
-                      style={styles.titleInput}
-                      value={title}
-                      onChangeText={setTitle}
-                      placeholder="Enter note title"
-                      placeholderTextColor="#A0A0A0"
-                      multiline={false}
-                      maxLength={100}
-                      accessibilityLabel="Note title input"
-                      returnKeyType="next"
-                    />
-                  </View>
+              {/* Title Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Title</Text>
+                <TextInput
+                  style={styles.titleInput}
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder="Enter note title"
+                  placeholderTextColor="#A0A0A0"
+                  multiline={false}
+                  maxLength={100}
+                  accessibilityLabel="Note title input"
+                  returnKeyType="next"
+                />
+              </View>
 
-                  {/* Content Input */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Content</Text>
-                    <TextInput
-                      style={styles.contentInput}
-                      value={content}
-                      onChangeText={setContent}
-                      placeholder="Write your note here..."
-                      placeholderTextColor="#A0A0A0"
-                      multiline
-                      textAlignVertical="top"
-                      accessibilityLabel="Note content input"
-                      scrollEnabled={false}
-                    />
-                  </View>
+              {/* Content Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Content</Text>
+                <TextInput
+                  style={styles.contentInput}
+                  value={content}
+                  onChangeText={setContent}
+                  placeholder="Write your note here..."
+                  placeholderTextColor="#A0A0A0"
+                  multiline
+                  textAlignVertical="top"
+                  accessibilityLabel="Note content input"
+                  scrollEnabled={true}
+                />
+              </View>
 
-                  {/* Delete Button for Edit Mode */}
-                  {noteToEdit && (
-                    <TouchableOpacity
-                      onPress={handleDelete}
-                      disabled={isSubmitting}
-                      style={styles.deleteButton}>
-                      <Text style={styles.deleteButtonText}>Delete Note</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </ScrollView>
+              {/* Delete Button for Edit Mode */}
+              {noteToEdit && (
+                <TouchableOpacity
+                  onPress={handleDelete}
+                  disabled={isSubmitting}
+                  style={styles.deleteButton}>
+                  <Text style={styles.deleteButtonText}>Delete Note</Text>
+                </TouchableOpacity>
+              )}
             </View>
-          </SafeAreaView>
+          </ScrollView>
         </KeyboardAvoidingView>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
@@ -399,45 +377,10 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: "flex-end",
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "#FFFFFF",
   },
   keyboardAvoidingView: {
-    maxHeight: SCREEN_HEIGHT * 0.9,
-  },
-  safeAreaContainer: {
-    backgroundColor: "transparent",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: SCREEN_HEIGHT * 0.85,
-    minHeight: SCREEN_HEIGHT * 0.6,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  handleBar: {
-    width: 40,
-    height: 4,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 2,
-    alignSelf: "center",
-    marginTop: 12,
-    marginBottom: 8,
+    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -447,6 +390,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
+    backgroundColor: "#FFFFFF",
   },
   cancelButton: {
     paddingVertical: 8,
@@ -483,10 +427,15 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  scrollViewContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
   },
   formContainer: {
-    padding: 20,
-    paddingBottom: 20,
+    flex: 1,
   },
   inputGroup: {
     marginBottom: 24,

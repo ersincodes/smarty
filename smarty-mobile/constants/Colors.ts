@@ -1,6 +1,6 @@
 // Modern Design System Colors
 const Colors = {
-  // Primary Brand Colors
+  // Primary Brand Colors - Enhanced for AI sophistication
   primary: {
     50: "#EBF5FF",
     100: "#DBEAFE",
@@ -12,6 +12,38 @@ const Colors = {
     700: "#1D4ED8",
     800: "#1E40AF",
     900: "#1E3A8A",
+  },
+
+  // AI-themed gradient colors for premium effects
+  ai: {
+    gradient: {
+      start: "#667eea",
+      middle: "#764ba2",
+      end: "#f093fb",
+    },
+    neural: {
+      start: "#4facfe",
+      end: "#00f2fe",
+    },
+    intelligence: {
+      start: "#667eea",
+      end: "#764ba2",
+    },
+    premium: {
+      start: "#6366f1",
+      middle: "#8b5cf6",
+      end: "#a855f7",
+    },
+  },
+
+  // Enhanced semantic colors for AI features
+  intelligence: {
+    50: "#F0F9FF",
+    100: "#E0F2FE",
+    500: "#0EA5E9",
+    600: "#0284C7",
+    700: "#0369A1",
+    glow: "rgba(14, 165, 233, 0.3)",
   },
 
   // Secondary Colors

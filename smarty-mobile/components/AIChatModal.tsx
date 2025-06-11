@@ -274,7 +274,8 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ visible, onDismiss }) => {
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardAvoidingView}>
+          style={styles.keyboardAvoidingView}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
           <SafeAreaView style={styles.safeAreaContainer} edges={["bottom"]}>
             <View
               style={[
@@ -345,6 +346,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ visible, onDismiss }) => {
                     style={styles.messagesList}
                     contentContainerStyle={styles.messagesContent}
                     showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
                   />
                 </View>
 
@@ -362,6 +364,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ visible, onDismiss }) => {
                     maxLength={500}
                     editable={!isLoading}
                     accessibilityLabel="Chat message input"
+                    placeholderTextColor="#999"
                   />
                   <Button
                     mode="contained"
@@ -384,7 +387,8 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ visible, onDismiss }) => {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: "center",
+    paddingTop: SCREEN_HEIGHT * 0.1,
   },
   backdrop: {
     position: "absolute",
@@ -395,17 +399,23 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   keyboardAvoidingView: {
-    maxHeight: SCREEN_HEIGHT * 0.9,
+    maxHeight: SCREEN_HEIGHT * 0.85,
+    flex: 1,
   },
   safeAreaContainer: {
     backgroundColor: "transparent",
+    flex: 1,
   },
   modalContent: {
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: SCREEN_HEIGHT * 0.85,
-    minHeight: SCREEN_HEIGHT * 0.6,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    maxHeight: SCREEN_HEIGHT * 0.8,
+    minHeight: SCREEN_HEIGHT * 0.65,
+    marginHorizontal: 10,
+    flex: 1,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -638,25 +648,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
+    borderTopColor: "#F0F0F0",
     backgroundColor: "white",
+    minHeight: 70,
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#E8E8E8",
     borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     marginRight: 8,
-    maxHeight: 100,
+    maxHeight: 80,
+    minHeight: 40,
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F8F9FA",
+    color: "#1A1A1A",
+    lineHeight: 20,
   },
   sendButton: {
     borderRadius: 20,
+    backgroundColor: "#007AFF",
+    minHeight: 40,
+    justifyContent: "center",
   },
 });
 
