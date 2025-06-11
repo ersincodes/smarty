@@ -27,33 +27,33 @@ const onboardingData: OnboardingItem[] = [
   {
     id: "1",
     title: "Welcome to Smarty AI",
-    subtitle: "Your Intelligent Companion",
+    subtitle: "Advanced Intelligence",
     description:
-      "Transform your note-taking experience with AI-powered insights and organization.",
+      "Experience the future of personal knowledge management with GPT-powered AI that understands, analyzes, and enhances your thinking.",
     icon: "brain",
   },
   {
     id: "2",
-    title: "Smart Organization",
-    subtitle: "Categories & Search",
+    title: "Intelligent Organization",
+    subtitle: "Neural Categorization",
     description:
-      "Automatically categorize your notes and find them instantly with powerful search.",
+      "AI automatically organizes your thoughts with semantic understanding, intelligent tagging, and context-aware categorization.",
     icon: "folder-multiple",
   },
   {
     id: "3",
-    title: "AI-Powered Chat",
-    subtitle: "Ask Questions",
+    title: "AI Knowledge Assistant",
+    subtitle: "Contextual Intelligence",
     description:
-      "Chat with your notes using AI. Get insights, summaries, and answers from your content.",
+      "Engage in sophisticated conversations with an AI that knows your notes intimately, providing insights, summaries, and strategic analysis.",
     icon: "chat-processing",
   },
   {
     id: "4",
-    title: "Sync Everywhere",
-    subtitle: "Cross-Platform",
+    title: "Enterprise-Grade Sync",
+    subtitle: "Seamless Intelligence",
     description:
-      "Access your notes on any device. Your data stays in sync across all platforms.",
+      "Your AI-enhanced knowledge base synchronizes across all devices with enterprise security and real-time intelligence updates.",
     icon: "sync",
   },
 ];
@@ -274,8 +274,15 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center",
-    fontWeight: "bold",
+    fontWeight: "900",
     marginBottom: 8,
+    fontSize: 30,
+    letterSpacing: -1.2,
+    textShadowColor: "rgba(59, 130, 246, 0.12)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    fontFamily: "System",
+    includeFontPadding: false,
   },
   subtitle: {
     textAlign: "center",

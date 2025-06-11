@@ -55,6 +55,22 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="add-note"
+        options={{
+          title: "Add Note",
+          tabBarIcon: ({ color }) => <TabBarIcon name="plus" color={color} />,
+          tabBarAccessibilityLabel: "Add note tab",
+        }}
+      />
+      <Tabs.Screen
+        name="ai-assistant"
+        options={{
+          title: "Ask Smarty",
+          tabBarIcon: ({ color }) => <TabBarIcon name="magic" color={color} />,
+          tabBarAccessibilityLabel: "AI Assistant tab",
+        }}
+      />
+      <Tabs.Screen
         name="two"
         options={{
           title: "About",

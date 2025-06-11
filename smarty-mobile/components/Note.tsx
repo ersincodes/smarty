@@ -8,10 +8,21 @@ import Colors from "../constants/Colors";
 interface NoteProps {
   note: NoteWithCategory;
   onPress: () => void;
+  isExpanded?: boolean;
+  onExpand?: () => void;
+  onCollapse?: () => void;
 }
 
-const Note: React.FC<NoteProps> = ({ note, onPress }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const Note: React.FC<NoteProps> = ({
+  note,
+  onPress,
+  isExpanded: externalIsExpanded,
+  onExpand,
+  onCollapse,
+}) => {
+  const [internalIsExpanded, setInternalIsExpanded] = useState(false);
+  const isExpanded =
+    externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
 
   const maxContentLength = 120;
   const shouldShowMoreButton =
@@ -30,9 +41,20 @@ const Note: React.FC<NoteProps> = ({ note, onPress }) => {
   const handleToggleExpand = useCallback(
     (e: any) => {
       e.stopPropagation();
-      setIsExpanded(!isExpanded);
+
+      if (externalIsExpanded !== undefined) {
+        // Using external state - call the appropriate callback
+        if (isExpanded) {
+          onCollapse?.();
+        } else {
+          onExpand?.();
+        }
+      } else {
+        // Using internal state
+        setInternalIsExpanded(!internalIsExpanded);
+      }
     },
-    [isExpanded]
+    [isExpanded, externalIsExpanded, internalIsExpanded, onExpand, onCollapse]
   );
 
   return (

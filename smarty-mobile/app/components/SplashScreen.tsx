@@ -69,7 +69,7 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = () => {
           <Text
             variant="bodyLarge"
             style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-            Your intelligent note-taking companion
+            Advanced AI Intelligence for Personal Knowledge Management
           </Text>
         </Animated.View>
       </View>
@@ -113,9 +113,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   brandTitle: {
-    fontWeight: "bold",
+    fontWeight: "900",
     textAlign: "center",
     marginBottom: 16,
+    fontSize: 42,
+    letterSpacing: -2.2,
+    textShadowColor: "rgba(59, 130, 246, 0.25)",
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 10,
+    fontFamily: "System",
+    includeFontPadding: false,
   },
   subtitle: {
     textAlign: "center",

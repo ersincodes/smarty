@@ -35,7 +35,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = () => {
         <Text
           variant="bodyLarge"
           style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-          Your intelligent note-taking companion
+          Advanced AI Intelligence for Personal Knowledge Management
         </Text>
 
         <View style={styles.loadingContainer}>
@@ -87,9 +87,16 @@ const styles = StyleSheet.create({
     height: 80,
   },
   brandTitle: {
-    fontWeight: "bold",
+    fontWeight: "900",
     textAlign: "center",
     marginBottom: 16,
+    fontSize: 40,
+    letterSpacing: -2,
+    textShadowColor: "rgba(59, 130, 246, 0.2)",
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 8,
+    fontFamily: "System",
+    includeFontPadding: false,
   },
   subtitle: {
     textAlign: "center",
