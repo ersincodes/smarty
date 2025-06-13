@@ -11,6 +11,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   Appbar,
   Searchbar,
@@ -22,7 +23,6 @@ import {
 import { useAuth } from "@clerk/clerk-expo";
 import { useNotesStore } from "../store/notesStore";
 import { useCategoriesStore } from "../store/categoriesStore";
-// import { testApiEndpoints } from "../config/api";
 import { NoteWithCategory } from "../types";
 import Note from "../../components/Note";
 import AddEditNoteModal from "../../components/AddEditNoteModal";
@@ -152,10 +152,7 @@ const NotesScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={Colors.background.primary}
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       <View style={styles.headerContent}>
         <View style={styles.headerTop}>
           <View style={styles.titleContainer}>
@@ -177,7 +174,7 @@ const NotesScreen: React.FC = () => {
           <Button
             mode="text"
             onPress={handleSignOut}
-            textColor={Colors.text.tertiary}
+            textColor="rgba(255, 255, 255, 0.8)"
             compact
             accessibilityLabel="Sign out">
             Sign Out
@@ -191,8 +188,8 @@ const NotesScreen: React.FC = () => {
             value={searchQuery}
             style={styles.searchbar}
             inputStyle={styles.searchInput}
-            iconColor={Colors.text.tertiary}
-            placeholderTextColor={Colors.text.tertiary}
+            iconColor="rgba(255, 255, 255, 0.7)"
+            placeholderTextColor="rgba(255, 255, 255, 0.6)"
             accessibilityLabel="Search notes"
           />
         </View>
@@ -202,79 +199,85 @@ const NotesScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {renderHeader()}
+      <LinearGradient
+        colors={
+          ["#1a1a2e", "#16213e", "#0f3460"] as [string, string, ...string[]]
+        }
+        style={styles.backgroundGradient}>
+        {renderHeader()}
 
-      <View style={styles.content}>
-        {/* Error State */}
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorIcon}>⚠️</Text>
-            <View style={styles.errorTextContainer}>
-              <Text style={styles.errorTitle}>Something went wrong</Text>
-              <Text style={styles.errorText}>{error}</Text>
+        <View style={styles.content}>
+          {/* Error State */}
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorIcon}>⚠️</Text>
+              <View style={styles.errorTextContainer}>
+                <Text style={styles.errorTitle}>Something went wrong</Text>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {/* Notes List */}
-        {!error &&
-          (isLoading && notes.length === 0 ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary[500]} />
-              <Text style={styles.loadingText}>Loading your notes...</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={filteredNotes}
-              renderItem={renderNote}
-              keyExtractor={(item) => item.id}
-              ListEmptyComponent={renderEmptyState}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isLoading}
-                  onRefresh={handleRefresh}
-                  colors={[Colors.primary[500]]}
-                  tintColor={Colors.primary[500]}
-                />
-              }
-              contentContainerStyle={
-                filteredNotes.length === 0
-                  ? styles.emptyListContainer
-                  : styles.listContainer
-              }
-              showsVerticalScrollIndicator={false}
-            />
-          ))}
-      </View>
+          {/* Notes List */}
+          {!error &&
+            (isLoading && notes.length === 0 ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary[500]} />
+                <Text style={styles.loadingText}>Loading your notes...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={filteredNotes}
+                renderItem={renderNote}
+                keyExtractor={(item) => item.id}
+                ListEmptyComponent={renderEmptyState}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={handleRefresh}
+                    colors={[Colors.primary[500]]}
+                    tintColor={Colors.primary[500]}
+                  />
+                }
+                contentContainerStyle={
+                  filteredNotes.length === 0
+                    ? styles.emptyListContainer
+                    : styles.listContainer
+                }
+                showsVerticalScrollIndicator={false}
+              />
+            ))}
+        </View>
 
-      <AddEditNoteModal
-        visible={showEditModal}
-        onDismiss={handleCloseEditModal}
-        noteToEdit={selectedNote}
-      />
-
-      <Snackbar
-        visible={!!error}
-        onDismiss={clearError}
-        duration={4000}
-        style={styles.snackbar}
-        action={{
-          label: "Dismiss",
-          onPress: clearError,
-        }}>
-        {error}
-      </Snackbar>
-
-      {/* Floating Collapse Button */}
-      {expandedNoteId && (
-        <FAB
-          icon="chevron-up"
-          style={styles.collapseButton}
-          onPress={handleNoteCollapse}
-          accessibilityLabel="Collapse expanded note"
-          accessibilityHint="Tap to collapse the currently expanded note"
+        <AddEditNoteModal
+          visible={showEditModal}
+          onDismiss={handleCloseEditModal}
+          noteToEdit={selectedNote}
         />
-      )}
+
+        <Snackbar
+          visible={!!error}
+          onDismiss={clearError}
+          duration={4000}
+          style={styles.snackbar}
+          action={{
+            label: "Dismiss",
+            onPress: clearError,
+          }}>
+          {error}
+        </Snackbar>
+
+        {/* Floating Collapse Button */}
+        {expandedNoteId && (
+          <FAB
+            icon="chevron-up"
+            style={styles.collapseButton}
+            onPress={handleNoteCollapse}
+            accessibilityLabel="Collapse expanded note"
+            accessibilityHint="Tap to collapse the currently expanded note"
+          />
+        )}
+      </LinearGradient>
     </SafeAreaView>
   );
 };
@@ -282,16 +285,19 @@ const NotesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
+    backgroundColor: "#1a1a2e",
+  },
+  backgroundGradient: {
+    flex: 1,
   },
   headerContainer: {
-    backgroundColor: Colors.background.primary,
+    backgroundColor: "transparent",
     paddingBottom: 8,
-    shadowColor: Colors.gray[900],
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowColor: "rgba(0, 229, 255, 0.3)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   headerContent: {
     paddingHorizontal: 20,
@@ -321,20 +327,20 @@ const styles = StyleSheet.create({
   },
   appTitle: {
     fontSize: 36,
-    fontWeight: "900",
-    color: Colors.primary[700],
-    letterSpacing: -1.8,
-    textShadowColor: Colors.intelligence.glow,
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
-    fontFamily: "System",
-    textTransform: "none",
+    fontWeight: "800",
+    color: "#00E5FF",
+    letterSpacing: -0.5,
+    textShadowColor: "rgba(0, 229, 255, 0.8)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
+    fontFamily: "SF Pro Display",
     textDecorationLine: "none",
     includeFontPadding: false,
+    elevation: 2,
   },
   appSubtitle: {
     fontSize: 13,
-    color: Colors.intelligence[600],
+    color: "rgba(255, 255, 255, 0.8)",
     marginTop: 1,
     fontWeight: "600",
     letterSpacing: 0.3,
@@ -344,19 +350,19 @@ const styles = StyleSheet.create({
     marginHorizontal: -4,
   },
   searchbar: {
-    backgroundColor: Colors.background.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 12,
     elevation: 0,
-    shadowColor: Colors.gray[900],
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowColor: "rgba(0, 229, 255, 0.3)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
+    borderColor: "rgba(0, 229, 255, 0.3)",
   },
   searchInput: {
     fontSize: 16,
-    color: Colors.text.primary,
+    color: "#FFFFFF",
   },
   content: {
     flex: 1,
@@ -370,7 +376,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "500",
   },
   listContainer: {
@@ -388,10 +394,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyStateIconContainer: {
-    backgroundColor: Colors.primary[100],
+    backgroundColor: "rgba(0, 229, 255, 0.2)",
     borderRadius: 24,
     padding: 16,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.3)",
   },
   emptyStateIcon: {
     fontSize: 32,
@@ -400,13 +408,13 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: "#FFFFFF",
     marginBottom: 12,
     textAlign: "center",
   },
   emptyStateText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: "rgba(255, 255, 255, 0.7)",
     textAlign: "center",
     lineHeight: 24,
     maxWidth: 280,
@@ -417,14 +425,14 @@ const styles = StyleSheet.create({
   },
   emptyStateLoaderText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "500",
     marginTop: 12,
     textAlign: "center",
   },
 
   snackbar: {
-    backgroundColor: Colors.error[500],
+    backgroundColor: "rgba(239, 68, 68, 0.9)",
     marginBottom: 16,
     marginHorizontal: 16,
     borderRadius: 8,
@@ -432,8 +440,8 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: Colors.error[50],
-    borderColor: Colors.error[200],
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    borderColor: "rgba(239, 68, 68, 0.3)",
     borderWidth: 1,
     borderRadius: 12,
     padding: 16,
@@ -450,12 +458,12 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: Colors.error[700],
+    color: "rgba(239, 68, 68, 0.9)",
     marginBottom: 4,
   },
   errorText: {
     fontSize: 14,
-    color: Colors.error[600],
+    color: "rgba(239, 68, 68, 0.8)",
     lineHeight: 20,
   },
   statusBanner: {
@@ -498,13 +506,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     right: 16,
-    backgroundColor: Colors.primary[600],
+    backgroundColor: "#00E5FF",
     borderRadius: 28,
     elevation: 6,
-    shadowColor: Colors.gray[900],
+    shadowColor: "rgba(0, 229, 255, 0.5)",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
   },
 });
 

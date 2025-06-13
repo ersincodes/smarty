@@ -29,7 +29,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = () => {
         <Text
           variant="headlineLarge"
           style={[styles.brandTitle, { color: theme.colors.primary }]}>
-          Smarty AI
+          Smarty
         </Text>
 
         <Text

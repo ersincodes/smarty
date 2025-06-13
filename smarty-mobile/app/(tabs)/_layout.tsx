@@ -20,25 +20,26 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary[600],
-        tabBarInactiveTintColor: Colors.text.tertiary,
+        tabBarActiveTintColor: "#00E5FF",
+        tabBarInactiveTintColor: "rgba(255, 255, 255, 0.6)",
         tabBarStyle: {
-          backgroundColor: Colors.background.primary,
-          borderTopColor: Colors.gray[200],
+          backgroundColor: "#16213e",
+          borderTopColor: "rgba(0, 229, 255, 0.3)",
           borderTopWidth: 1,
           height: 84,
           paddingTop: 8,
           paddingBottom: 28,
-          shadowColor: Colors.gray[900],
-          shadowOffset: { width: 0, height: -1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 3,
-          elevation: 8,
+          shadowColor: "rgba(0, 229, 255, 0.5)",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 12,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "600",
           marginTop: 4,
+          letterSpacing: 0.3,
         },
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.

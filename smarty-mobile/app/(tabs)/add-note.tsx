@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet, StatusBar, Image, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { Button } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
@@ -27,10 +28,7 @@ const AddNoteScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={Colors.background.primary}
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       <View style={styles.headerContent}>
         <View style={styles.headerTop}>
           <View style={styles.titleContainer}>
@@ -51,7 +49,7 @@ const AddNoteScreen: React.FC = () => {
           <Button
             mode="text"
             onPress={handleSignOut}
-            textColor={Colors.text.tertiary}
+            textColor="rgba(255, 255, 255, 0.8)"
             compact
             accessibilityLabel="Sign out">
             Sign Out
@@ -63,32 +61,38 @@ const AddNoteScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {renderHeader()}
-      <View style={styles.content}>
-        <View style={styles.instructionContainer}>
-          <View style={styles.instructionIconContainer}>
-            <Text style={styles.instructionIcon}>✍️</Text>
+      <LinearGradient
+        colors={
+          ["#1a1a2e", "#16213e", "#0f3460"] as [string, string, ...string[]]
+        }
+        style={styles.backgroundGradient}>
+        {renderHeader()}
+        <View style={styles.content}>
+          <View style={styles.instructionContainer}>
+            <View style={styles.instructionIconContainer}>
+              <Text style={styles.instructionIcon}>✍️</Text>
+            </View>
+            <Text style={styles.instructionTitle}>Ready to create?</Text>
+            <Text style={styles.instructionText}>
+              Tap the button below to start writing your note. You can add a
+              title, content, and organize it with categories.
+            </Text>
+            <Button
+              mode="contained"
+              onPress={() => setShowAddModal(true)}
+              style={styles.createButton}
+              labelStyle={styles.createButtonLabel}
+              accessibilityLabel="Create new note">
+              Create New Note
+            </Button>
           </View>
-          <Text style={styles.instructionTitle}>Ready to create?</Text>
-          <Text style={styles.instructionText}>
-            Tap the button below to start writing your note. You can add a
-            title, content, and organize it with categories.
-          </Text>
-          <Button
-            mode="contained"
-            onPress={() => setShowAddModal(true)}
-            style={styles.createButton}
-            labelStyle={styles.createButtonLabel}
-            accessibilityLabel="Create new note">
-            Create New Note
-          </Button>
         </View>
-      </View>
 
-      <AddEditNoteModal
-        visible={showAddModal}
-        onDismiss={handleCloseAddModal}
-      />
+        <AddEditNoteModal
+          visible={showAddModal}
+          onDismiss={handleCloseAddModal}
+        />
+      </LinearGradient>
     </SafeAreaView>
   );
 };
@@ -96,16 +100,19 @@ const AddNoteScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
+    backgroundColor: "#1a1a2e",
+  },
+  backgroundGradient: {
+    flex: 1,
   },
   headerContainer: {
-    backgroundColor: Colors.background.primary,
+    backgroundColor: "transparent",
     paddingBottom: 8,
-    shadowColor: Colors.gray[900],
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowColor: "rgba(0, 229, 255, 0.3)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   headerContent: {
     paddingHorizontal: 20,
@@ -133,22 +140,23 @@ const styles = StyleSheet.create({
   titleTextContainer: {
     flex: 1,
   },
+
   appTitle: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: Colors.primary[700],
-    letterSpacing: -1.8,
-    textShadowColor: Colors.intelligence.glow,
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
-    fontFamily: "System",
-    textTransform: "none",
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#00E5FF",
+    letterSpacing: -0.5,
+    textShadowColor: "rgba(0, 229, 255, 0.8)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
+    fontFamily: "SF Pro Display",
     textDecorationLine: "none",
     includeFontPadding: false,
+    elevation: 2,
   },
   appSubtitle: {
     fontSize: 13,
-    color: Colors.intelligence[600],
+    color: "rgba(255, 255, 255, 0.8)",
     marginTop: 1,
     fontWeight: "600",
     letterSpacing: 0.3,
@@ -165,10 +173,12 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   instructionIconContainer: {
-    backgroundColor: Colors.primary[100],
+    backgroundColor: "rgba(0, 229, 255, 0.2)",
     borderRadius: 24,
     padding: 16,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.3)",
   },
   instructionIcon: {
     fontSize: 32,
@@ -177,26 +187,26 @@ const styles = StyleSheet.create({
   instructionTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.text.primary,
+    color: "#FFFFFF",
     marginBottom: 12,
     textAlign: "center",
   },
   instructionText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: "rgba(255, 255, 255, 0.7)",
     textAlign: "center",
     lineHeight: 24,
     marginBottom: 32,
   },
   createButton: {
-    backgroundColor: Colors.primary[600],
+    backgroundColor: "#00E5FF",
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 24,
-    shadowColor: Colors.primary[700],
+    shadowColor: "rgba(0, 229, 255, 0.5)",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
     elevation: 8,
   },
   createButtonLabel: {
