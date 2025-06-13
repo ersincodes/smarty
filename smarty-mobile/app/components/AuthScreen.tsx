@@ -315,18 +315,25 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                     </Text>
 
                     <TextInput
-                      label="Verification Code"
+                      label="Code"
                       value={verificationCode}
-                      onChangeText={setVerificationCode}
-                      mode="outlined"
+                      onChangeText={(text) => {
+                        // Only allow numeric input and limit to 6 digits
+                        const numericText = text.replace(/[^0-9]/g, "");
+                        setVerificationCode(numericText);
+                      }}
+                      mode="flat"
                       keyboardType="number-pad"
                       returnKeyType="done"
-                      style={styles.input}
+                      style={[styles.input, styles.verificationCodeInput]}
                       disabled={isLoading}
-                      placeholder="Enter 6-digit code"
+                      placeholder="123456"
                       maxLength={6}
-                      left={<TextInput.Icon icon="numeric" />}
-                      contentStyle={styles.inputContent}
+                      left={<TextInput.Icon icon="shield-check-outline" />}
+                      contentStyle={[
+                        styles.inputContent,
+                        styles.verificationCodeContent,
+                      ]}
                       outlineStyle={styles.inputOutline}
                       theme={{
                         colors: {
@@ -608,6 +615,18 @@ const styles = StyleSheet.create({
     maxWidth: screenWidth * 0.8,
     alignSelf: "center",
     lineHeight: 18,
+  },
+  verificationCodeInput: {
+    textAlign: "center",
+    height: 60,
+    maxHeight: 60,
+  },
+  verificationCodeContent: {
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "600",
+    letterSpacing: 2,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
 });
 
