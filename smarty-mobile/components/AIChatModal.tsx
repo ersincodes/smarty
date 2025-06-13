@@ -371,6 +371,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ visible, onDismiss }) => {
                     onPress={handleSendMessage}
                     disabled={!inputText.trim() || isLoading}
                     style={styles.sendButton}
+                    labelStyle={styles.sendButtonText}
                     compact>
                     Send
                   </Button>
@@ -674,6 +675,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#007AFF",
     minHeight: 40,
     justifyContent: "center",
+  },
+  sendButtonText: {
+    color: "#FFFFFF",
   },
 });
 

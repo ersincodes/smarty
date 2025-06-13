@@ -7,10 +7,12 @@ import {
   Image,
   Dimensions,
   Platform,
+  StatusBar,
 } from "react-native";
 import { Button, Text, Surface, TextInput, useTheme } from "react-native-paper";
 import { useSignIn, useSignUp } from "@clerk/clerk-expo";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -121,267 +123,308 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <View style={styles.logoContainer}>
-            <View
-              style={[
-                styles.logoBackground,
-                { backgroundColor: theme.colors.primaryContainer },
-              ]}>
-              <Image
-                source={require("../../assets/images/android-chrome-192x192.png")}
-                style={styles.logo}
-                resizeMode="contain"
-              />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
+      <LinearGradient
+        colors={
+          ["#1a1a2e", "#16213e", "#0f3460"] as [string, string, ...string[]]
+        }
+        style={styles.backgroundGradient}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          {/* Hero Section */}
+          <View style={styles.heroSection}>
+            <View style={styles.logoContainer}>
+              <View
+                style={[
+                  styles.logoBackground,
+                  { backgroundColor: theme.colors.primaryContainer },
+                ]}>
+                <Image
+                  source={require("../../assets/images/android-chrome-192x192.png")}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
-          </View>
 
-          <Text
-            variant="headlineLarge"
-            style={[styles.title, { color: theme.colors.onBackground }]}>
-            Welcome to
-          </Text>
-          <Text
-            variant="headlineLarge"
-            style={[styles.brandTitle, { color: theme.colors.primary }]}>
-            Smarty AI
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-            Advanced AI Intelligence for Personal Knowledge Management
-          </Text>
-        </View>
-
-        {/* Form Section */}
-        <Surface
-          style={[
-            styles.formSurface,
-            { backgroundColor: theme.colors.surface },
-          ]}
-          elevation={2}>
-          {!pendingVerification ? (
-            <>
-              <Text
-                variant="headlineSmall"
-                style={[styles.formTitle, { color: theme.colors.onSurface }]}>
-                {isSignUp ? "Create Account" : "Sign In"}
-              </Text>
-
-              <View style={styles.formContainer}>
-                <TextInput
-                  label="Email Address"
-                  value={email}
-                  onChangeText={setEmail}
-                  mode="outlined"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  returnKeyType="next"
-                  style={styles.input}
-                  disabled={isLoading}
-                  left={<TextInput.Icon icon="email-outline" />}
-                  contentStyle={styles.inputContent}
-                  accessibilityLabel="Email address input"
-                  accessibilityHint="Enter your email address to sign in or create an account"
-                />
-
-                <TextInput
-                  label="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  mode="outlined"
-                  secureTextEntry
-                  autoComplete={isSignUp ? "new-password" : "current-password"}
-                  returnKeyType="done"
-                  style={styles.input}
-                  disabled={isLoading}
-                  left={<TextInput.Icon icon="lock-outline" />}
-                  contentStyle={styles.inputContent}
-                  accessibilityLabel="Password input"
-                  accessibilityHint={
-                    isSignUp
-                      ? "Choose a secure password for your new account"
-                      : "Enter your password to sign in"
-                  }
-                />
-
-                <Button
-                  mode="contained"
-                  onPress={isSignUp ? handleSignUp : handleSignIn}
-                  loading={isLoading}
-                  disabled={!email || !password || isLoading}
-                  style={styles.submitButton}
-                  contentStyle={styles.buttonContent}
-                  labelStyle={styles.buttonLabel}
-                  accessibilityLabel={
-                    isSignUp ? "Create new account button" : "Sign in button"
-                  }
-                  accessibilityHint={
-                    isSignUp
-                      ? "Tap to create your new Smarty AI account"
-                      : "Tap to sign in to your Smarty AI account"
-                  }>
-                  {isSignUp ? "Create Account" : "Sign In"}
-                </Button>
-
-                {!isSignUp && (
-                  <Button
-                    mode="text"
-                    onPress={() => {
-                      /* Add forgot password functionality */
-                    }}
-                    style={styles.forgotButton}
-                    labelStyle={{ color: theme.colors.primary }}>
-                    Forgot Password?
-                  </Button>
-                )}
-              </View>
-            </>
-          ) : (
-            <>
-              <Text
-                variant="headlineSmall"
-                style={[styles.formTitle, { color: theme.colors.onSurface }]}>
-                Verify Email
-              </Text>
-
-              <View style={styles.verificationContainer}>
-                <View
-                  style={[
-                    styles.verificationIconContainer,
-                    { backgroundColor: theme.colors.primaryContainer },
-                  ]}>
-                  <Text
-                    style={[
-                      styles.verificationIcon,
-                      { color: theme.colors.primary },
-                    ]}>
-                    ✉️
-                  </Text>
-                </View>
-
-                <Text
-                  variant="bodyMedium"
-                  style={[
-                    styles.verificationText,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}>
-                  We've sent a verification code to
-                </Text>
-                <Text
-                  variant="bodyMedium"
-                  style={[styles.emailText, { color: theme.colors.primary }]}>
-                  {email}
-                </Text>
-                <Text
-                  variant="bodySmall"
-                  style={[
-                    styles.verificationSubtext,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}>
-                  Please enter the 6-digit code below
-                </Text>
-
-                <TextInput
-                  label="Verification Code"
-                  value={verificationCode}
-                  onChangeText={setVerificationCode}
-                  mode="outlined"
-                  keyboardType="number-pad"
-                  returnKeyType="done"
-                  style={styles.input}
-                  disabled={isLoading}
-                  placeholder="Enter 6-digit code"
-                  maxLength={6}
-                  left={<TextInput.Icon icon="numeric" />}
-                  contentStyle={styles.inputContent}
-                  accessibilityLabel="Email verification code input"
-                  accessibilityHint="Enter the 6-digit verification code sent to your email"
-                />
-
-                <Button
-                  mode="contained"
-                  onPress={handleVerifyEmail}
-                  loading={isLoading}
-                  disabled={!verificationCode || isLoading}
-                  style={styles.submitButton}
-                  contentStyle={styles.buttonContent}
-                  labelStyle={styles.buttonLabel}>
-                  Verify Email
-                </Button>
-
-                <View style={styles.verificationActions}>
-                  <Button
-                    mode="outlined"
-                    onPress={handleResendCode}
-                    disabled={isLoading}
-                    style={styles.resendButton}>
-                    Resend Code
-                  </Button>
-
-                  <Button
-                    mode="text"
-                    onPress={() => {
-                      setPendingVerification(false);
-                      setVerificationCode("");
-                    }}
-                    disabled={isLoading}
-                    style={styles.backButton}>
-                    Back to Sign Up
-                  </Button>
-                </View>
-              </View>
-            </>
-          )}
-        </Surface>
-
-        {/* Toggle Section */}
-        {!pendingVerification && (
-          <View style={styles.toggleSection}>
             <Text
-              variant="bodyMedium"
-              style={[
-                styles.toggleText,
-                { color: theme.colors.onSurfaceVariant },
-              ]}>
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}
+              variant="headlineLarge"
+              style={[styles.title, { color: "#FFFFFF" }]}>
+              Welcome to
             </Text>
-            <Button
-              mode="text"
-              onPress={handleToggleMode}
-              labelStyle={[
-                styles.toggleButtonLabel,
-                { color: theme.colors.primary },
-              ]}
-              contentStyle={styles.toggleButtonContent}>
-              {isSignUp ? "Sign In" : "Sign Up"}
-            </Button>
+            <Text
+              variant="headlineLarge"
+              style={[styles.brandTitle, { color: "#00E5FF" }]}>
+              Smarty
+            </Text>
           </View>
-        )}
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text
-            variant="bodySmall"
-            style={[styles.footerText, { color: theme.colors.outline }]}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </Text>
-        </View>
-      </ScrollView>
+          {/* Form Section */}
+          <Surface
+            style={[
+              styles.formSurface,
+              { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+            ]}
+            elevation={0}>
+            <View style={styles.formContent}>
+              {!pendingVerification ? (
+                <>
+                  <Text
+                    variant="headlineSmall"
+                    style={[styles.formTitle, { color: "#FFFFFF" }]}>
+                    {isSignUp ? "Create Account" : "Sign In"}
+                  </Text>
+
+                  <View style={styles.formContainer}>
+                    <TextInput
+                      label="Email Address"
+                      value={email}
+                      onChangeText={setEmail}
+                      mode="flat"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      returnKeyType="next"
+                      style={styles.input}
+                      disabled={isLoading}
+                      left={<TextInput.Icon icon="email-outline" />}
+                      contentStyle={styles.inputContent}
+                      outlineStyle={styles.inputOutline}
+                      theme={{
+                        colors: {
+                          primary: "#00E5FF",
+                          onSurfaceVariant: "rgba(255, 255, 255, 0.7)",
+                          onSurface: "#FFFFFF",
+                          surfaceVariant: "rgba(255, 255, 255, 0.1)",
+                          outline: "rgba(0, 229, 255, 0.3)",
+                        },
+                      }}
+                      accessibilityLabel="Email address input"
+                      accessibilityHint="Enter your email address to sign in or create an account"
+                    />
+
+                    <TextInput
+                      label="Password"
+                      value={password}
+                      onChangeText={setPassword}
+                      mode="flat"
+                      secureTextEntry
+                      autoComplete={
+                        isSignUp ? "new-password" : "current-password"
+                      }
+                      returnKeyType="done"
+                      style={styles.input}
+                      disabled={isLoading}
+                      left={<TextInput.Icon icon="lock-outline" />}
+                      contentStyle={styles.inputContent}
+                      outlineStyle={styles.inputOutline}
+                      theme={{
+                        colors: {
+                          primary: "#00E5FF",
+                          onSurfaceVariant: "rgba(255, 255, 255, 0.7)",
+                          onSurface: "#FFFFFF",
+                          surfaceVariant: "rgba(255, 255, 255, 0.1)",
+                          outline: "rgba(0, 229, 255, 0.3)",
+                        },
+                      }}
+                      accessibilityLabel="Password input"
+                      accessibilityHint={
+                        isSignUp
+                          ? "Choose a secure password for your new account"
+                          : "Enter your password to sign in"
+                      }
+                    />
+
+                    <Button
+                      mode="contained"
+                      onPress={isSignUp ? handleSignUp : handleSignIn}
+                      loading={isLoading}
+                      disabled={!email || !password || isLoading}
+                      style={styles.submitButton}
+                      contentStyle={styles.buttonContent}
+                      labelStyle={styles.buttonLabel}
+                      accessibilityLabel={
+                        isSignUp
+                          ? "Create new account button"
+                          : "Sign in button"
+                      }
+                      accessibilityHint={
+                        isSignUp
+                          ? "Tap to create your new Smarty account"
+                          : "Tap to sign in to your Smarty account"
+                      }>
+                      {isSignUp ? "Create Account" : "Sign In"}
+                    </Button>
+
+                    {!isSignUp && (
+                      <Button
+                        mode="text"
+                        onPress={() => {
+                          /* Add forgot password functionality */
+                        }}
+                        style={styles.forgotButton}
+                        labelStyle={{ color: "#00E5FF" }}>
+                        Forgot Password?
+                      </Button>
+                    )}
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text
+                    variant="headlineSmall"
+                    style={[styles.formTitle, { color: "#FFFFFF" }]}>
+                    Verify Email
+                  </Text>
+
+                  <View style={styles.verificationContainer}>
+                    <View
+                      style={[
+                        styles.verificationIconContainer,
+                        { backgroundColor: "rgba(0, 229, 255, 0.2)" },
+                      ]}>
+                      <Text
+                        style={[styles.verificationIcon, { color: "#00E5FF" }]}>
+                        ✉️
+                      </Text>
+                    </View>
+
+                    <Text
+                      variant="bodyMedium"
+                      style={[
+                        styles.verificationText,
+                        { color: "rgba(255, 255, 255, 0.8)" },
+                      ]}>
+                      We've sent a verification code to
+                    </Text>
+                    <Text
+                      variant="bodyMedium"
+                      style={[styles.emailText, { color: "#00E5FF" }]}>
+                      {email}
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={[
+                        styles.verificationSubtext,
+                        { color: "rgba(255, 255, 255, 0.7)" },
+                      ]}>
+                      Please enter the 6-digit code below
+                    </Text>
+
+                    <TextInput
+                      label="Verification Code"
+                      value={verificationCode}
+                      onChangeText={setVerificationCode}
+                      mode="outlined"
+                      keyboardType="number-pad"
+                      returnKeyType="done"
+                      style={styles.input}
+                      disabled={isLoading}
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      left={<TextInput.Icon icon="numeric" />}
+                      contentStyle={styles.inputContent}
+                      outlineStyle={styles.inputOutline}
+                      theme={{
+                        colors: {
+                          primary: "#00E5FF",
+                          onSurfaceVariant: "rgba(255, 255, 255, 0.7)",
+                          onSurface: "#FFFFFF",
+                          surfaceVariant: "rgba(255, 255, 255, 0.1)",
+                          outline: "rgba(0, 229, 255, 0.3)",
+                        },
+                      }}
+                      accessibilityLabel="Email verification code input"
+                      accessibilityHint="Enter the 6-digit verification code sent to your email"
+                    />
+
+                    <Button
+                      mode="contained"
+                      onPress={handleVerifyEmail}
+                      loading={isLoading}
+                      disabled={!verificationCode || isLoading}
+                      style={styles.submitButton}
+                      contentStyle={styles.buttonContent}
+                      labelStyle={styles.buttonLabel}>
+                      Verify Email
+                    </Button>
+
+                    <View style={styles.verificationActions}>
+                      <Button
+                        mode="outlined"
+                        onPress={handleResendCode}
+                        disabled={isLoading}
+                        style={styles.resendButton}>
+                        Resend Code
+                      </Button>
+
+                      <Button
+                        mode="text"
+                        onPress={() => {
+                          setPendingVerification(false);
+                          setVerificationCode("");
+                        }}
+                        disabled={isLoading}
+                        style={styles.backButton}>
+                        Back to Sign Up
+                      </Button>
+                    </View>
+                  </View>
+                </>
+              )}
+            </View>
+          </Surface>
+
+          {/* Toggle Section */}
+          {!pendingVerification && (
+            <View style={styles.toggleSection}>
+              <Text
+                variant="bodyMedium"
+                style={[
+                  styles.toggleText,
+                  { color: "rgba(255, 255, 255, 0.8)" },
+                ]}>
+                {isSignUp
+                  ? "Already have an account?"
+                  : "Don't have an account?"}
+              </Text>
+              <Button
+                mode="text"
+                onPress={handleToggleMode}
+                labelStyle={[styles.toggleButtonLabel, { color: "#00E5FF" }]}
+                contentStyle={styles.toggleButtonContent}>
+                {isSignUp ? "Sign In" : "Sign Up"}
+              </Button>
+            </View>
+          )}
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.footerText,
+                { color: "rgba(255, 255, 255, 0.6)" },
+              ]}>
+              By continuing, you agree to our Terms of Service and Privacy
+              Policy
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: "#1a1a2e",
+  },
+  backgroundGradient: {
     flex: 1,
   },
   scrollContent: {
@@ -391,11 +434,11 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: "center",
-    paddingTop: 40,
-    paddingBottom: 40,
+    paddingTop: 30,
+    paddingBottom: 20,
   },
   logoContainer: {
-    marginBottom: 30,
+    marginBottom: 20,
   },
   logoBackground: {
     width: 120,
@@ -403,14 +446,17 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    backgroundColor: "rgba(0, 229, 255, 0.2)",
+    borderWidth: 2,
+    borderColor: "rgba(0, 229, 255, 0.3)",
+    shadowColor: "rgba(0, 229, 255, 0.5)",
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   logo: {
     width: 80,
@@ -422,15 +468,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   brandTitle: {
-    fontWeight: "900",
+    fontWeight: "800",
     textAlign: "center",
-    marginBottom: 16,
-    fontSize: 40,
-    letterSpacing: -2,
-    textShadowColor: "rgba(59, 130, 246, 0.2)",
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 8,
-    fontFamily: "System",
+    marginBottom: 24,
+    fontSize: 36,
+    letterSpacing: -1,
+    textShadowColor: "rgba(0, 229, 255, 0.8)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
+    fontFamily: "SF Pro Display",
     includeFontPadding: false,
   },
   subtitle: {
@@ -443,32 +489,49 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 32,
     paddingHorizontal: 24,
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.3)",
+    shadowColor: "rgba(0, 229, 255, 0.3)",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
   },
   formTitle: {
     textAlign: "center",
     marginBottom: 24,
     fontWeight: "600",
   },
+  formContent: {
+    overflow: "hidden",
+  },
   formContainer: {
     gap: 16,
   },
   input: {
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    marginBottom: 4,
   },
   inputContent: {
     paddingLeft: 8,
+    color: "#FFFFFF",
+  },
+  inputOutline: {
+    borderRadius: 12,
+    borderWidth: 2,
   },
   submitButton: {
-    marginTop: 8,
+    marginTop: 16,
     borderRadius: 12,
+    backgroundColor: "#00E5FF",
+    shadowColor: "rgba(0, 229, 255, 0.5)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
   buttonContent: {
     paddingVertical: 6,

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Image, Animated } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface CustomSplashScreenProps {}
 
@@ -35,50 +36,49 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = () => {
   }, [logoScale, logoOpacity, textOpacity]);
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.logoContainer,
-            {
-              opacity: logoOpacity,
-              transform: [{ scale: logoScale }],
-            },
-          ]}>
-          <View
+    <LinearGradient
+      colors={["#1a1a2e", "#16213e", "#0f3460"]}
+      style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.content}>
+          <Animated.View
             style={[
-              styles.logoBackground,
-              { backgroundColor: theme.colors.primaryContainer },
+              styles.logoContainer,
+              {
+                opacity: logoOpacity,
+                transform: [{ scale: logoScale }],
+              },
             ]}>
-            <Image
-              source={require("../../assets/images/android-chrome-192x192.png")}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-        </Animated.View>
+            <View style={styles.logoBackground}>
+              <Image
+                source={require("../../assets/images/android-chrome-192x192.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+          </Animated.View>
 
-        <Animated.View style={[styles.textContainer, { opacity: textOpacity }]}>
-          <Text
-            variant="headlineLarge"
-            style={[styles.brandTitle, { color: theme.colors.primary }]}>
-            Smarty AI
-          </Text>
+          <Animated.View
+            style={[styles.textContainer, { opacity: textOpacity }]}>
+            <Text variant="headlineLarge" style={styles.brandTitle}>
+              Smarty
+            </Text>
 
-          <Text
-            variant="bodyLarge"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-            Advanced AI Intelligence for Personal Knowledge Management
-          </Text>
-        </Animated.View>
-      </View>
-    </SafeAreaView>
+            <Text variant="bodyLarge" style={styles.subtitle}>
+              Advanced AI Intelligence for Personal Knowledge Management
+            </Text>
+          </Animated.View>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   content: {
@@ -88,26 +88,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   logoContainer: {
-    marginBottom: 40,
+    marginBottom: 50,
   },
   logoBackground: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    backgroundColor: "rgba(0, 229, 255, 0.1)",
+    borderWidth: 2,
+    borderColor: "rgba(0, 229, 255, 0.3)",
+    shadowColor: "#00E5FF",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 12,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 15,
   },
   logo: {
-    width: 90,
-    height: 90,
+    width: 100,
+    height: 100,
   },
   textContainer: {
     alignItems: "center",
@@ -115,18 +118,21 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontWeight: "900",
     textAlign: "center",
-    marginBottom: 16,
-    fontSize: 42,
-    letterSpacing: -2.2,
-    textShadowColor: "rgba(59, 130, 246, 0.25)",
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 10,
+    marginBottom: 20,
+    fontSize: 50,
+    letterSpacing: 4,
+    color: "#00E5FF",
+    textShadowColor: "rgba(0, 229, 255, 0.6)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
     fontFamily: "System",
     includeFontPadding: false,
   },
   subtitle: {
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 26,
+    color: "rgba(255, 255, 255, 0.85)",
+    fontSize: 16,
   },
 });
 

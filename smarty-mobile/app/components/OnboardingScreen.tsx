@@ -26,7 +26,7 @@ interface OnboardingScreenProps {
 const onboardingData: OnboardingItem[] = [
   {
     id: "1",
-    title: "Welcome to Smarty AI",
+    title: "Welcome to Smarty",
     subtitle: "Advanced Intelligence",
     description:
       "Experience the future of personal knowledge management with GPT-powered AI that understands, analyzes, and enhances your thinking.",
@@ -110,38 +110,40 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
             { backgroundColor: theme.colors.surface },
           ]}
           elevation={2}>
-          <View
-            style={[
-              styles.iconContainer,
-              { backgroundColor: theme.colors.primaryContainer },
-            ]}>
-            <IconButton
-              icon={item.icon}
-              size={32}
-              iconColor={theme.colors.primary}
-            />
+          <View style={styles.featureCardContent}>
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.primaryContainer },
+              ]}>
+              <IconButton
+                icon={item.icon}
+                size={32}
+                iconColor={theme.colors.primary}
+              />
+            </View>
+
+            <Text
+              variant="headlineMedium"
+              style={[styles.title, { color: theme.colors.onSurface }]}>
+              {item.title}
+            </Text>
+
+            <Text
+              variant="titleMedium"
+              style={[styles.subtitle, { color: theme.colors.primary }]}>
+              {item.subtitle}
+            </Text>
+
+            <Text
+              variant="bodyLarge"
+              style={[
+                styles.description,
+                { color: theme.colors.onSurfaceVariant },
+              ]}>
+              {item.description}
+            </Text>
           </View>
-
-          <Text
-            variant="headlineMedium"
-            style={[styles.title, { color: theme.colors.onSurface }]}>
-            {item.title}
-          </Text>
-
-          <Text
-            variant="titleMedium"
-            style={[styles.subtitle, { color: theme.colors.primary }]}>
-            {item.subtitle}
-          </Text>
-
-          <Text
-            variant="bodyLarge"
-            style={[
-              styles.description,
-              { color: theme.colors.onSurfaceVariant },
-            ]}>
-            {item.description}
-          </Text>
         </Surface>
       </View>
     </View>
@@ -263,6 +265,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 3,
+  },
+  featureCardContent: {
+    alignItems: "center",
+    overflow: "hidden",
   },
   iconContainer: {
     width: 80,
