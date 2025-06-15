@@ -25,16 +25,9 @@ const apiClient = axios.create({
   },
 });
 
-// Add request interceptor to log API calls and add auth
+// Add request interceptor for auth
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(
-      `🌐 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${
-        config.url
-      }`
-    );
-    // Log headers for debugging auth issues
-    console.log("🔑 Request headers:", config.headers);
     return config;
   },
   (error) => {
@@ -46,13 +39,6 @@ apiClient.interceptors.request.use(
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
-    console.log(
-      "📦 Response data preview:",
-      typeof response.data === "object"
-        ? JSON.stringify(response.data).substring(0, 200) + "..."
-        : response.data?.toString().substring(0, 200) + "..."
-    );
     return response;
   },
   (error: AxiosError<ApiError>) => {
@@ -72,16 +58,13 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Auth token helper with better debugging
+// Auth token helper
 const getAuthHeaders = async (getToken: () => Promise<string | null>) => {
   try {
     const token = await getToken();
     if (!token) {
       throw new Error("Authentication token not available");
     }
-
-    console.log("🔐 Auth token length:", token.length);
-    console.log("🔐 Auth token preview:", token.substring(0, 50) + "...");
 
     return {
       Authorization: `Bearer ${token}`,
@@ -122,7 +105,6 @@ export const notesApi = {
   getNotes: async (getToken: () => Promise<string | null>): Promise<Note[]> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log("🔐 Fetching notes with authentication");
 
       const response = await apiClient.get("/notes", { headers });
 
@@ -135,7 +117,6 @@ export const notesApi = {
       // Ensure we return an array
       const noteArray = Array.isArray(notes) ? notes : [];
 
-      console.log(`✅ Successfully fetched ${noteArray.length} notes`);
       return noteArray.map((note) => ({
         ...note,
         createdAt: new Date(note.createdAt),
@@ -154,7 +135,6 @@ export const notesApi = {
   ): Promise<Note> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log(`🔐 Fetching note with ID: ${id}`);
 
       // Since your backend doesn't have /notes/:id, we'll get all notes and filter
       const allNotes = await notesApi.getNotes(getToken);
@@ -178,7 +158,6 @@ export const notesApi = {
   ): Promise<Note> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log("🔐 Creating new note:", noteData.title);
 
       const response = await apiClient.post("/notes", noteData, { headers });
 
@@ -188,7 +167,6 @@ export const notesApi = {
         note = note.note; // Unwrap { note: {...} } format
       }
 
-      console.log("✅ Successfully created note");
       return {
         ...note,
         createdAt: new Date(note.createdAt),
@@ -207,7 +185,6 @@ export const notesApi = {
   ): Promise<Note> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log(`🔐 Updating note: ${noteData.id}`);
 
       // Your backend expects the full object including ID in the body
       const response = await apiClient.put("/notes", noteData, { headers });
@@ -218,7 +195,6 @@ export const notesApi = {
         note = note.note; // Unwrap { note: {...} } format
       }
 
-      console.log("✅ Successfully updated note");
       return {
         ...note,
         createdAt: new Date(note.createdAt),
@@ -237,15 +213,12 @@ export const notesApi = {
   ): Promise<void> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log(`🔐 Deleting note: ${id}`);
 
       // Your backend expects { id } in the request body
       await apiClient.delete("/notes", {
         headers,
         data: { id }, // Send ID in body, not URL
       });
-
-      console.log("✅ Successfully deleted note");
     } catch (error) {
       console.error("❌ Failed to delete note:", error);
       throw error;
@@ -259,7 +232,6 @@ export const notesApi = {
   ): Promise<Note[]> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log(`🔍 Searching notes with query: "${query}"`);
 
       const encodedQuery = encodeURIComponent(query);
       const endpoints = [
@@ -277,7 +249,6 @@ export const notesApi = {
         }
 
         const noteArray = Array.isArray(notes) ? notes : [];
-        console.log(`✅ Found ${noteArray.length} notes matching query`);
         return noteArray.map((note) => ({
           ...note,
           createdAt: new Date(note.createdAt),
@@ -285,14 +256,12 @@ export const notesApi = {
         }));
       } catch (error) {
         // If search endpoint doesn't exist, filter existing notes
-        console.log("🔍 Search endpoint not available, filtering locally");
         const allNotes = await notesApi.getNotes(getToken);
         const filteredNotes = allNotes.filter(
           (note) =>
             note.title.toLowerCase().includes(query.toLowerCase()) ||
             note.content.toLowerCase().includes(query.toLowerCase())
         );
-        console.log(`✅ Found ${filteredNotes.length} notes matching query`);
         return filteredNotes;
       }
     } catch (error) {
@@ -310,7 +279,6 @@ export const categoriesApi = {
   ): Promise<Category[]> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log("🔐 Fetching categories with authentication");
 
       const response = await apiClient.get("/categories", { headers });
 
@@ -325,7 +293,6 @@ export const categoriesApi = {
 
       const categoryArray = Array.isArray(categories) ? categories : [];
 
-      console.log(`✅ Successfully fetched ${categoryArray.length} categories`);
       return categoryArray.map((category) => ({
         ...category,
         createdAt: category.createdAt
@@ -348,7 +315,6 @@ export const categoriesApi = {
   ): Promise<Category> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log("🔐 Creating new category:", categoryData.name);
 
       const response = await apiClient.post("/categories", categoryData, {
         headers,
@@ -359,7 +325,6 @@ export const categoriesApi = {
         category = category.category;
       }
 
-      console.log("✅ Successfully created category");
       return {
         ...category,
         createdAt: category.createdAt
@@ -383,7 +348,6 @@ export const categoriesApi = {
   ): Promise<Category> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log(`🔐 Updating category: ${id}`);
 
       // Assuming similar pattern to notes
       const response = await apiClient.put(
@@ -397,7 +361,6 @@ export const categoriesApi = {
         category = category.category;
       }
 
-      console.log("✅ Successfully updated category");
       return {
         ...category,
         createdAt: category.createdAt
@@ -420,15 +383,12 @@ export const categoriesApi = {
   ): Promise<void> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log(`🔐 Deleting category: ${id}`);
 
       // Similar pattern to notes - ID in body
       await apiClient.delete("/categories", {
         headers,
         data: { id },
       });
-
-      console.log("✅ Successfully deleted category");
     } catch (error) {
       console.error("❌ Failed to delete category:", error);
       throw error;
@@ -445,7 +405,6 @@ export const chatApi = {
   ): Promise<{ content: string; relatedNotes?: Note[] }> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log("🔐 Sending chat message to AI");
 
       const endpoints = [
         "/chat", // Target /api/chat
@@ -458,7 +417,6 @@ export const chatApi = {
         { headers }
       );
 
-      console.log("✅ Successfully received AI response");
       return {
         content: response.data.content,
         relatedNotes:
@@ -481,7 +439,6 @@ export const chatApi = {
   ): Promise<{ suggestions: string[] }> => {
     try {
       const headers = await getAuthHeaders(getToken);
-      console.log("🔐 Getting AI suggestions");
 
       const endpoints = [
         "/chat/suggestions", // Target /api/chat/suggestions
@@ -494,7 +451,6 @@ export const chatApi = {
         { headers }
       );
 
-      console.log("✅ Successfully received AI suggestions");
       return response.data;
     } catch (error) {
       console.error("❌ Failed to get AI suggestions:", error);

@@ -37,7 +37,6 @@ export const useNotes = () => {
       const notes = await notesApi.getNotes(getToken);
       setState({ data: notes, loading: false, error: null });
     } catch (error) {
-      console.log("⚠️ Unexpected error in useNotes.fetchNotes:", error);
       setState({
         data: [],
         loading: false,

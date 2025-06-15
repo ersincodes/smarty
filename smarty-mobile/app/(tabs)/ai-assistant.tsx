@@ -39,7 +39,7 @@ const AIAssistantScreen: React.FC = () => {
                 accessibilityLabel="Smarty app logo"
               />
               <View style={styles.titleTextContainer}>
-                <Text style={styles.appTitle}>AI Assistant</Text>
+                <Text style={styles.appTitle}>Smarty Assistant</Text>
                 <Text style={styles.appSubtitle}>
                   Ask Smarty • Powered by AI
                 </Text>

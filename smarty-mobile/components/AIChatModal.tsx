@@ -293,7 +293,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ visible, onDismiss }) => {
                   <Text style={styles.closeText}>Close</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>AI Assistant</Text>
+                <Text style={styles.headerTitle}>Smarty Assistant</Text>
 
                 <TouchableOpacity
                   onPress={handleClearChat}
