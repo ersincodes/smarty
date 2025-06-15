@@ -90,23 +90,6 @@ const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
     }
   }, [visible, noteToEdit]);
 
-  // Add a separate useEffect to log categories when they change
-  useEffect(() => {
-    if (visible && isCategoriesLoaded) {
-      console.log("Current categories in modal:", categories);
-      console.log("Categories count:", categories?.length || 0);
-
-      // Also log if the selected categoryId exists in the categories
-      if (categoryId) {
-        const selectedCategory = categories?.find((c) => c.id === categoryId);
-        console.log(
-          "Selected category:",
-          selectedCategory?.name || "Not found"
-        );
-      }
-    }
-  }, [categories, visible, isCategoriesLoaded, categoryId]);
-
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
       Alert.alert("Error", "Please enter a title for your note.");

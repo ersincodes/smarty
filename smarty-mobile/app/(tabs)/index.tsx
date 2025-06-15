@@ -26,12 +26,10 @@ import { useCategoriesStore } from "../store/categoriesStore";
 import { NoteWithCategory } from "../types";
 import Note from "../../components/Note";
 import AddEditNoteModal from "../../components/AddEditNoteModal";
-import BackendConnectionTest from "../components/BackendConnectionTest";
 import Colors from "../../constants/Colors";
 
 const NotesScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showConnectionTest, setShowConnectionTest] = useState(false);
   const [selectedNote, setSelectedNote] = useState<NoteWithCategory | null>(
     null
   );
@@ -60,7 +58,7 @@ const NotesScreen: React.FC = () => {
           // Refresh notes categories after both are loaded to ensure proper mapping
           refreshNotesCategories();
         } catch (error) {
-          console.error("Failed to load initial data:", error);
+          // Error handling is managed by the store
         }
       };
       loadData();
@@ -486,21 +484,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     flex: 1,
     lineHeight: 20,
-  },
-  connectionTestModal: {
-    padding: 20,
-    margin: 20,
-    backgroundColor: Colors.background.primary,
-    borderRadius: 16,
-    maxHeight: "80%",
-  },
-  connectionTestContent: {
-    flex: 1,
-  },
-  closeTestButton: {
-    marginTop: 16,
-    backgroundColor: "transparent",
-    borderColor: Colors.primary[500],
   },
   collapseButton: {
     position: "absolute",

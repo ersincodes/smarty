@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Smarty AI",
-    "slug": "smarty-ai",
+    "name": "Smarty",
+    "slug": "smarty",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/android-chrome-512x512.png",
-    "scheme": "smartyai",
+    "scheme": "smarty",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {

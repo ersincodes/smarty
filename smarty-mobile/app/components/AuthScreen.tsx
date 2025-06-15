@@ -25,6 +25,14 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Forgot password states
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [pendingPasswordReset, setPendingPasswordReset] = useState(false);
+
   const theme = useTheme();
 
   const { signIn, setActive } = useSignIn();
@@ -36,6 +44,12 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
     setPassword("");
     setVerificationCode("");
     setPendingVerification(false);
+    // Reset forgot password states
+    setIsForgotPassword(false);
+    setForgotPasswordEmail("");
+    setResetCode("");
+    setNewPassword("");
+    setPendingPasswordReset(false);
   };
 
   const handleSignIn = async () => {
@@ -122,6 +136,98 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
     }
   };
 
+  // Forgot password handlers
+  const handleForgotPassword = () => {
+    setIsForgotPassword(true);
+    setForgotPasswordEmail(email); // Pre-fill with current email if available
+  };
+
+  const handleBackToSignIn = () => {
+    setIsForgotPassword(false);
+    setForgotPasswordEmail("");
+    setResetCode("");
+    setNewPassword("");
+    setPendingPasswordReset(false);
+  };
+
+  const handleInitiatePasswordReset = async () => {
+    if (!signIn || !forgotPasswordEmail.trim()) {
+      Alert.alert("Error", "Please enter your email address");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signIn.create({
+        identifier: forgotPasswordEmail,
+      });
+
+      const firstFactor = signIn.supportedFirstFactors?.find((factor) => {
+        return factor.strategy === "reset_password_email_code";
+      });
+
+      if (firstFactor) {
+        await signIn.prepareFirstFactor({
+          strategy: "reset_password_email_code",
+          emailAddressId: firstFactor.emailAddressId,
+        });
+
+        setPendingPasswordReset(true);
+        Alert.alert(
+          "Check your email",
+          "We've sent a password reset code to your email address. Please enter it below along with your new password."
+        );
+      } else {
+        Alert.alert(
+          "Error",
+          "Password reset is not available for this account. Please contact support."
+        );
+      }
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      Alert.alert(
+        "Error",
+        error.errors?.[0]?.message ||
+          "Failed to initiate password reset. Please check your email address and try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCompletePasswordReset = async () => {
+    if (!signIn || !resetCode.trim() || !newPassword.trim()) {
+      Alert.alert("Error", "Please enter the reset code and your new password");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await signIn.attemptFirstFactor({
+        strategy: "reset_password_email_code",
+        code: resetCode,
+        password: newPassword,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        Alert.alert(
+          "Success",
+          "Your password has been reset successfully and you are now signed in."
+        );
+      }
+    } catch (error: any) {
+      console.error("Password reset completion error:", error);
+      Alert.alert(
+        "Error",
+        error.errors?.[0]?.message ||
+          "Failed to reset password. Please check your reset code and try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
@@ -170,7 +276,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
             ]}
             elevation={0}>
             <View style={styles.formContent}>
-              {!pendingVerification ? (
+              {!pendingVerification && !isForgotPassword ? (
                 <>
                   <Text
                     variant="headlineSmall"
@@ -262,14 +368,229 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                     {!isSignUp && (
                       <Button
                         mode="text"
-                        onPress={() => {
-                          /* Add forgot password functionality */
-                        }}
+                        onPress={handleForgotPassword}
                         style={styles.forgotButton}
                         labelStyle={{ color: "#00E5FF" }}>
                         Forgot Password?
                       </Button>
                     )}
+                  </View>
+                </>
+              ) : isForgotPassword ? (
+                <>
+                  <Text
+                    variant="headlineSmall"
+                    style={[styles.formTitle, { color: "#FFFFFF" }]}>
+                    {pendingPasswordReset
+                      ? "Reset Password"
+                      : "Forgot Password"}
+                  </Text>
+
+                  <View style={styles.verificationContainer}>
+                    <View
+                      style={[
+                        styles.verificationIconContainer,
+                        { backgroundColor: "rgba(255, 152, 0, 0.2)" },
+                      ]}>
+                      <Text
+                        style={[styles.verificationIcon, { color: "#FF9800" }]}>
+                        🔐
+                      </Text>
+                    </View>
+
+                    {!pendingPasswordReset ? (
+                      <>
+                        <Text
+                          variant="bodyMedium"
+                          style={[
+                            styles.verificationText,
+                            { color: "rgba(255, 255, 255, 0.8)" },
+                          ]}>
+                          Enter your email address and we'll send you a code to
+                          reset your password
+                        </Text>
+
+                        <TextInput
+                          label="Email Address"
+                          value={forgotPasswordEmail}
+                          onChangeText={setForgotPasswordEmail}
+                          mode="flat"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoComplete="email"
+                          returnKeyType="done"
+                          style={[
+                            styles.input,
+                            {
+                              height: 60,
+                              maxHeight: 60,
+                              minHeight: 60,
+                              flex: 0,
+                              width: "100%",
+                              alignSelf: "stretch",
+                            },
+                          ]}
+                          disabled={isLoading}
+                          left={<TextInput.Icon icon="email-outline" />}
+                          theme={{
+                            colors: {
+                              primary: "#00E5FF",
+                              onSurfaceVariant: "rgba(255, 255, 255, 0.9)",
+                              onSurface: "#FFFFFF",
+                              surfaceVariant: "rgba(255, 255, 255, 0.1)",
+                              outline: "rgba(0, 229, 255, 0.5)",
+                              background: "rgba(255, 255, 255, 0.1)",
+                              surface: "rgba(255, 255, 255, 0.1)",
+                            },
+                          }}
+                          textColor="#FFFFFF"
+                          placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                          accessibilityLabel="Email address for password reset"
+                          accessibilityHint="Enter your email address to receive a password reset code"
+                        />
+
+                        <Button
+                          mode="contained"
+                          onPress={handleInitiatePasswordReset}
+                          loading={isLoading}
+                          disabled={!forgotPasswordEmail.trim() || isLoading}
+                          style={styles.submitButton}
+                          contentStyle={styles.buttonContent}
+                          labelStyle={styles.buttonLabel}>
+                          Send Reset Code
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Text
+                          variant="bodyMedium"
+                          style={[
+                            styles.verificationText,
+                            { color: "rgba(255, 255, 255, 0.8)" },
+                          ]}>
+                          We've sent a reset code to
+                        </Text>
+                        <Text
+                          variant="bodyMedium"
+                          style={[styles.emailText, { color: "#00E5FF" }]}>
+                          {forgotPasswordEmail}
+                        </Text>
+                        <Text
+                          variant="bodySmall"
+                          style={[
+                            styles.verificationSubtext,
+                            { color: "rgba(255, 255, 255, 0.7)" },
+                          ]}>
+                          Enter the code and your new password below
+                        </Text>
+
+                        <TextInput
+                          label="Reset Code"
+                          value={resetCode}
+                          onChangeText={(text) => {
+                            // Only allow numeric input and limit to 6 digits
+                            const numericText = text.replace(/[^0-9]/g, "");
+                            setResetCode(numericText);
+                          }}
+                          mode="flat"
+                          keyboardType="number-pad"
+                          returnKeyType="next"
+                          style={[
+                            styles.input,
+                            {
+                              height: 60,
+                              maxHeight: 60,
+                              minHeight: 60,
+                              flex: 0,
+                              width: "100%",
+                              alignSelf: "stretch",
+                              textAlign: "center",
+                            },
+                          ]}
+                          disabled={isLoading}
+                          placeholder="123456"
+                          maxLength={6}
+                          left={<TextInput.Icon icon="shield-check-outline" />}
+                          theme={{
+                            colors: {
+                              primary: "#00E5FF",
+                              onSurfaceVariant: "rgba(255, 255, 255, 0.9)",
+                              onSurface: "#FFFFFF",
+                              surfaceVariant: "rgba(255, 255, 255, 0.1)",
+                              outline: "rgba(0, 229, 255, 0.5)",
+                              background: "rgba(255, 255, 255, 0.1)",
+                              surface: "rgba(255, 255, 255, 0.1)",
+                            },
+                          }}
+                          textColor="#FFFFFF"
+                          placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                          accessibilityLabel="Password reset code input"
+                          accessibilityHint="Enter the 6-digit reset code sent to your email"
+                        />
+
+                        <TextInput
+                          label="New Password"
+                          value={newPassword}
+                          onChangeText={setNewPassword}
+                          mode="flat"
+                          secureTextEntry
+                          autoComplete="new-password"
+                          returnKeyType="done"
+                          style={[
+                            styles.input,
+                            {
+                              height: 60,
+                              maxHeight: 60,
+                              minHeight: 60,
+                              flex: 0,
+                              width: "100%",
+                              alignSelf: "stretch",
+                            },
+                          ]}
+                          disabled={isLoading}
+                          left={<TextInput.Icon icon="lock-outline" />}
+                          theme={{
+                            colors: {
+                              primary: "#00E5FF",
+                              onSurfaceVariant: "rgba(255, 255, 255, 0.9)",
+                              onSurface: "#FFFFFF",
+                              surfaceVariant: "rgba(255, 255, 255, 0.1)",
+                              outline: "rgba(0, 229, 255, 0.5)",
+                              background: "rgba(255, 255, 255, 0.1)",
+                              surface: "rgba(255, 255, 255, 0.1)",
+                            },
+                          }}
+                          textColor="#FFFFFF"
+                          placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                          accessibilityLabel="New password input"
+                          accessibilityHint="Enter your new password"
+                        />
+
+                        <Button
+                          mode="contained"
+                          onPress={handleCompletePasswordReset}
+                          loading={isLoading}
+                          disabled={
+                            !resetCode.trim() ||
+                            !newPassword.trim() ||
+                            isLoading
+                          }
+                          style={styles.submitButton}
+                          contentStyle={styles.buttonContent}
+                          labelStyle={styles.buttonLabel}>
+                          Reset Password
+                        </Button>
+                      </>
+                    )}
+
+                    <Button
+                      mode="text"
+                      onPress={handleBackToSignIn}
+                      disabled={isLoading}
+                      style={styles.backButton}
+                      labelStyle={{ color: "#00E5FF" }}>
+                      Back to Sign In
+                    </Button>
                   </View>
                 </>
               ) : (
@@ -361,7 +682,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
 
                     <View style={styles.verificationActions}>
                       <Button
-                        mode="outlined"
+                        mode="text"
                         onPress={handleResendCode}
                         disabled={isLoading}
                         style={styles.resendButton}>
@@ -386,7 +707,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
           </Surface>
 
           {/* Toggle Section */}
-          {!pendingVerification && (
+          {!pendingVerification && !isForgotPassword && (
             <View style={styles.toggleSection}>
               <Text
                 variant="bodyMedium"
@@ -554,6 +875,8 @@ const styles = StyleSheet.create({
   verificationContainer: {
     alignItems: "center",
     gap: 12,
+    flex: 0,
+    width: "100%",
   },
   verificationIconContainer: {
     width: 80,
@@ -612,7 +935,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     textAlign: "center",
-    maxWidth: screenWidth * 0.8,
+    maxWidth: screenWidth * 1,
     alignSelf: "center",
     lineHeight: 18,
   },

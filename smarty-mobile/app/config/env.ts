@@ -20,14 +20,6 @@ export const ENV = {
   IS_DEVELOPMENT: isDevelopment,
 };
 
-// Log current environment for debugging
-console.log("🚀 Backend Integration Active!");
-console.log("Current Environment:", {
-  isDevelopment: ENV.IS_DEVELOPMENT,
-  apiBaseUrl: ENV.API_BASE_URL,
-  message: isDevelopment
-    ? "✅ Using local Next.js backend at localhost:3000"
-    : "🌐 Using production backend at smarty-teal.vercel.app/api",
-});
+// Environment configuration loaded
 
 export default ENV;

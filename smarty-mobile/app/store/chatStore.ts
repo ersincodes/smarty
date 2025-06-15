@@ -113,13 +113,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
           if (!responseContent) {
             throw new Error("Empty response from backend");
           }
-
-          console.log("✅ Successfully received AI response from backend");
         } catch (backendError) {
-          console.log(
-            "🔄 Backend chat failed, falling back to local AI service:",
-            backendError
-          );
+          // Fallback to local AI service
 
           // Fallback to local OpenAI service (with mock responses if no API key)
           const aiMessages = updatedMessages.map((msg) => ({
@@ -138,9 +133,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ];
 
           responseContent = await aiService.chat(messagesWithSystem);
-          console.log(
-            "✅ Successfully received AI response from local service"
-          );
         }
       } else {
         // Use local AI service directly (with mock responses if no API key)
@@ -160,7 +152,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         ];
 
         responseContent = await aiService.chat(messagesWithSystem);
-        console.log("✅ Successfully received AI response from local service");
       }
 
       const assistantMessage: ChatMessage = {
@@ -263,15 +254,8 @@ INSTRUCTIONS:
           if (!responseContent) {
             throw new Error("Empty response from backend");
           }
-
-          console.log(
-            "✅ Successfully received AI response from backend with notes context"
-          );
         } catch (backendError) {
-          console.log(
-            "🔄 Backend chat failed, using local AI with notes context:",
-            backendError
-          );
+          // Fallback to local AI service with notes context
 
           const aiMessages = [
             systemMessage,
@@ -282,9 +266,6 @@ INSTRUCTIONS:
           ];
 
           responseContent = await aiService.chat(aiMessages);
-          console.log(
-            "✅ Successfully received AI response from local service with notes context"
-          );
         }
       } else {
         // Use local AI service with full notes context
@@ -297,9 +278,6 @@ INSTRUCTIONS:
         ];
 
         responseContent = await aiService.chat(aiMessages);
-        console.log(
-          "✅ Successfully received AI response from local service with notes context"
-        );
       }
 
       const assistantMessage: ChatMessage = {

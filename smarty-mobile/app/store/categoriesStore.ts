@@ -33,10 +33,6 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to fetch categories";
-      console.log(
-        "⚠️ Unexpected error in categoriesStore.fetchCategories:",
-        errorMessage
-      );
 
       // Set empty array for graceful error handling
       set({

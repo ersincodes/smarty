@@ -62,11 +62,6 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       const errorMessage =
         error instanceof Error ? error.message : "Failed to fetch notes";
 
-      console.log(
-        "⚠️ Unexpected error in notesStore.fetchNotes:",
-        errorMessage
-      );
-
       // Set empty array and no error message to prevent UI from showing error state
       // The API layer already handles the 405 gracefully
       set({
